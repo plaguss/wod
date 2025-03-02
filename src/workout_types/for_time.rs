@@ -2,25 +2,6 @@ use std::fmt;
 use std::str::FromStr;
 
 #[derive(Debug, PartialEq, Clone)]
-pub enum WorkoutType {
-    ForTime(ForTime),
-    Amrap,
-    Emom,
-    Weightlifting,
-}
-
-impl fmt::Display for WorkoutType {
-    fn fmt(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
-        match self {
-            WorkoutType::ForTime(ft) => write!(formatter, "{}", ft),
-            WorkoutType::Amrap => write!(formatter, "Amrap"),
-            WorkoutType::Emom => write!(formatter, "Emom"),
-            WorkoutType::Weightlifting => write!(formatter, "Weightlifting"),
-        }
-    }
-}
-
-#[derive(Debug, PartialEq, Clone)]
 pub struct ForTime {
     pub rounds: u32,
     pub name: String,
@@ -122,22 +103,5 @@ mod tests {
             ),
             "10 rounds for time"
         );
-    }
-
-    #[test]
-    fn test_workout_type_display() {
-        assert_eq!(
-            format!(
-                "{}",
-                WorkoutType::ForTime(ForTime {
-                    rounds: 1,
-                    name: "ft".to_string()
-                })
-            ),
-            "For Time"
-        );
-        assert_eq!(format!("{}", WorkoutType::Amrap), "Amrap");
-        assert_eq!(format!("{}", WorkoutType::Emom), "Emom");
-        assert_eq!(format!("{}", WorkoutType::Weightlifting), "Weightlifting");
     }
 }
