@@ -64,7 +64,7 @@ mod tests {
         );
         assert_eq!(
             WorkoutType::from_str("emom-10").unwrap(),
-            WorkoutType::EMOM(EMOM { minutes: 10 })
+            WorkoutType::EMOM(EMOM::from_str("emom-10").unwrap())
         );
         assert_eq!(
             "wl".parse::<WorkoutType>().unwrap(),
@@ -89,7 +89,7 @@ mod tests {
             "AMRAP 10 minutes"
         );
         assert_eq!(
-            format!("{}", WorkoutType::EMOM(EMOM { minutes: 10 })),
+            format!("{}", WorkoutType::EMOM(EMOM::from_str("emom-10").unwrap())),
             "EMOM 10 minutes"
         );
         assert_eq!(format!("{}", WorkoutType::Weightlifting), "Weightlifting");

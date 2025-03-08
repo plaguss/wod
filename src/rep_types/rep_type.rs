@@ -3,6 +3,9 @@ use std::str::FromStr;
 
 use crate::rep_types::distance::Distance;
 
+
+// TODO: All of these must take into account men/woman, so 30/20 cals, 20/15 (for reps),
+// 400/300m, etc. Use Weight as reference
 #[derive(Debug, PartialEq, Clone)]
 pub enum RepType {
     // Default number of repetitions, e.g. 10 or whatever single number

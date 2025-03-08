@@ -1,10 +1,14 @@
 use std::fmt;
 use std::str::FromStr;
 
+// EMOMS
 #[derive(Debug, PartialEq, Clone)]
 pub struct EMOM {
     // The number of minutes to perform the workout
-    pub minutes: u32,
+    pub rounds: u16,
+    pub every: u16,
+    pub alternating: bool,
+    pub rest: Rest
 }
 
 impl FromStr for EMOM {
@@ -13,30 +17,73 @@ impl FromStr for EMOM {
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         // Split the string into number part and name part
         let parts: Vec<&str> = s.split("-").collect();
-        if parts[0] != "emom" {
-            return Err("Invalid EMOM format".to_string());
-        }
-        if parts.len() != 2 {
-            return Err("Invalid EMOM format".to_string());
-        }
-        let number_part = parts[1];
+        let mut alternating = false;
+        let mut every = 1;
+        let mut rounds = 1;
+        let mut rest = Rest { duration: 0, unit: "".to_string() };
 
-        // Parse the time domain
-        let minutes = if number_part.is_empty() {
-            1 // Default to 1 if no number is present
-        } else {
-            number_part
-                .parse::<u32>()
-                .map_err(|_| "Invalid number format".to_string())?
-        };
-
-        Ok(EMOM { minutes })
+        let mut counter = 0;
+        for part in parts.iter() {
+            match part {
+                &"emom" => {
+                    continue;
+                }
+                &"alt" => {
+                    alternating = true;
+                }
+                _ => {
+                    if part.contains("m") | part.contains("s") {
+                        rest = Rest::from(part.to_string());
+                        continue;
+                    }
+    
+                    if counter == 0 {
+                        rounds = part
+                            .parse::<u16>()
+                            .map_err(|_| "Invalid number format".to_string())?;
+                    } else if counter == 1 {
+                        every = part
+                            .parse::<u16>()
+                            .map_err(|_| "Invalid number format".to_string())?;
+                    }
+                    counter += 1;
+                }
+            }
+        }
+        return Ok(EMOM {
+            rounds,
+            every,
+            alternating,
+            rest
+        });
     }
 }
 
 impl fmt::Display for EMOM {
     fn fmt(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(formatter, "EMOM {} minutes", self.minutes)
+        write!(formatter, "EMOM {} minutes", self.rounds)
+    }
+}
+
+#[derive(Debug, PartialEq, Clone)]
+pub struct Rest {
+    pub duration: u16,
+    pub unit: String
+}
+
+impl Rest {
+    pub fn from(rest: String) -> Self {
+        let mut duration = String::new();
+        let mut unit = String::new();
+    
+        for c in rest.chars() {
+            if c.is_numeric() {
+                duration.push(c);
+            } else {
+                unit.push(c);
+            }
+        }
+        Rest { duration: duration.parse().unwrap(), unit: unit }
     }
 }
 
@@ -46,18 +93,98 @@ mod tests {
 
     #[test]
     fn test_emom() {
-        assert_eq!(EMOM::from_str("emom-10").unwrap(), EMOM { minutes: 10 });
-        assert_eq!(EMOM::from_str("emom-").unwrap(), EMOM { minutes: 1 });
+        assert_eq!(
+            EMOM::from_str("emom-10").unwrap(),
+            EMOM {
+                rounds: 10,
+                every: 1,
+                alternating: false,
+                rest: Rest { duration: 0, unit: "".to_string() }
+            }
+        );
+        assert_eq!(
+            EMOM::from_str("emom-10-alt").unwrap(),
+            EMOM {
+                rounds: 10,
+                every: 1,
+                alternating: true,
+                rest: Rest { duration: 0, unit: "".to_string() }
+            }
+        );
+        assert_eq!(
+            EMOM::from_str("emom-10-2").unwrap(),
+            EMOM {
+                rounds: 10,
+                every: 2,
+                alternating: false,
+                rest: Rest { duration: 0, unit: "".to_string() }
+            }
+        );
+        assert_eq!(
+            EMOM::from_str("emom-10-2-alt").unwrap(),
+            EMOM {
+                rounds: 10,
+                every: 2,
+                alternating: true,
+                rest: Rest { duration: 0, unit: "".to_string() }
+            }
+        );
+        assert_eq!(
+            EMOM::from_str("emom-10-30s").unwrap(),
+            EMOM {
+                rounds: 10,
+                every: 1,
+                alternating: false,
+                rest: Rest { duration: 30, unit: "s".to_string() }
+            }
+        );
+        assert_eq!(
+            EMOM::from_str("emom-10-30s-alt").unwrap(),
+            EMOM {
+                rounds: 10,
+                every: 1,
+                alternating: true,
+                rest: Rest { duration: 30, unit: "s".to_string() }
+            }
+        );
     }
 
     #[test]
     fn test_emom_invalid() {
-        assert!(EMOM::from_str("emom").is_err());
         assert!(EMOM::from_str("other-10").is_err());
     }
 
     #[test]
+    fn test_rest() {
+        assert_eq!(
+            Rest::from("1m".to_string()),
+            Rest {
+                duration: 1,
+                unit: "m".to_string()
+            }
+        );
+        assert_eq!(
+            Rest::from("90s".to_string()),
+            Rest {
+                duration: 90,
+                unit: "s".to_string()
+            }
+        );
+    }
+
+    #[test]
     fn test_display() {
-        assert_eq!(format!("{}", EMOM { minutes: 10 }), "EMOM 10 minutes");
+        assert_eq!(
+            format!(
+                "{}",
+                EMOM {
+                    rounds: 10,
+                    every: 1,
+                    alternating: false,
+                    rest: Rest { duration: 0, unit: "".to_string() }
+                }
+            ),
+            "EMOM 10 minutes"
+        );
     }
 }

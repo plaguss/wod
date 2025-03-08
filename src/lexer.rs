@@ -10,7 +10,6 @@ use crate::workout_types::workout_type::WorkoutType;
 #[derive(Debug, PartialEq)]
 pub enum Token {
     // ft, amrap, emom, wl (what else?)
-    // TODO: The workout tye should deal with all this to avoid moving the logic to the lexer
     WorkoutType(WorkoutType),
     // 21, (any number)
     // cal, m (meters), s (seconds)
@@ -230,19 +229,10 @@ impl<'a> Lexer<'a> {
 
     fn parse_alphabetic(&mut self, tokens: &mut Vec<Token>) {
         let movement = self.read_movement();
-        println!("movement: {}", movement);
 
         if !movement.is_empty() {
-            if movement.contains("cal") {
-                // Something like "30 cal row" will be split here
-                let parts: Vec<_> = movement.split(' ').collect();
-                tokens.push(Token::RepType(RepType::from_str(parts[0]).unwrap()));
-                let mov = Movement::from_str(parts[1]).expect("Invalid movement");
-                tokens.push(Token::Movement(mov));
-            } else {
-                let mov = Movement::from_str(&movement).expect("Invalid movement");
-                tokens.push(Token::Movement(mov));
-            }
+            let mov = Movement::from_str(&movement).expect("Invalid movement");
+            tokens.push(Token::Movement(mov));
         }
     }
 }
@@ -385,6 +375,25 @@ mod tests {
             ]
         )
     }
+
+    #[test]
+    fn test_ft_with_distance() {
+        let input = "2rd 10m hs walk, 1 ring muscle up";
+        let mut lexer = Lexer::new(input);
+        let tokens = lexer.tokenize();
+
+        assert_eq!(
+            tokens,
+            vec![
+                Token::WorkoutType(WorkoutType::from_str("2rd").unwrap()),
+                Token::RepType(RepType::from_str("10m").unwrap()),
+                Token::Movement(Movement::from_str("hs walk").unwrap()),
+                Token::RepType(RepType::from_str("1").unwrap()),
+                Token::Movement(Movement::from_str("ring muscle up").unwrap()),
+            ]
+        );
+    }
+
     #[test]
     fn test_amrap() {
         let input = "amrap-12 10 db snatch, 1 ring muscle up";
@@ -403,51 +412,71 @@ mod tests {
         );
     }
 
+    #[test]
+    fn test_emom_0() {
+        let input = "emom-10 10 pull up";
+        let mut lexer = Lexer::new(input);
+        let tokens = lexer.tokenize();
+
+        assert_eq!(
+            tokens,
+            vec![
+                Token::WorkoutType(WorkoutType::from_str("emom-10").unwrap()),
+                Token::RepType(RepType::from_str("10").unwrap()),
+                Token::Movement(Movement::from_str("pull up").unwrap()),
+            ]
+        );
+    }
+
+    #[test]
+    fn test_emom_1() {
+        let input = "emom-10 10 pull up, 5 push up";
+        let mut lexer = Lexer::new(input);
+        let tokens = lexer.tokenize();
+
+        assert_eq!(
+            tokens,
+            vec![
+                Token::WorkoutType(WorkoutType::from_str("emom-10").unwrap()),
+                Token::RepType(RepType::from_str("10").unwrap()),
+                Token::Movement(Movement::from_str("pull up").unwrap()),
+                Token::RepType(RepType::from_str("5").unwrap()),
+                Token::Movement(Movement::from_str("push up").unwrap()),
+            ]
+        );
+    }
+
+    #[test]
+    fn test_emom_2() {
+        let input = "emom-8-20s-alt 12 power clean @ 60/40kg, 20cal row";
+        let mut lexer = Lexer::new(input);
+        let tokens = lexer.tokenize();
+
+        assert_eq!(
+            tokens,
+            vec![
+                Token::WorkoutType(WorkoutType::from_str("emom-8-20s-alt").unwrap()),
+                Token::RepType(RepType::from_str("12").unwrap()),
+                Token::Movement(Movement::from_str("power clean").unwrap()),
+                Token::At,
+                Token::Weight(Weight::from("60/40kg".to_string())),
+                Token::RepType(RepType::from_str("20cal").unwrap()),
+                Token::Movement(Movement::from_str("row").unwrap()),
+            ]
+        );
+    }
     // #[test]
-    // fn test_emom() {
-    //     let input = "emom-90s(-alt) 21-15-9 thrusters,pull ups";
+    // fn test_emom_1() {
+    //     let input = "emom-10 10 pull up, 5 push up";
     //     let mut lexer = Lexer::new(input);
     //     let tokens = lexer.tokenize();
 
     //     assert_eq!(tokens, vec![
-    //         Token::WorkoutType("ft".to_string()),
-    //         Token::Reps("21".to_string()),
-    //         Token::Reps("15".to_string()),
-    //         Token::Reps("9".to_string()),
-    //         Token::Movement("pull up".to_string()),
-    //         Token::Movement("thruster".to_string()),
-    //     ]);
-    // }
-
-    // #[test]
-    // fn test_strength() {
-    //     let input = "wl 5x5 snatch @70%";
-    //     let mut lexer = Lexer::new(input);
-    //     let tokens = lexer.tokenize();
-
-    //     assert_eq!(tokens, vec![
-    //         Token::WorkoutType("ft".to_string()),
-    //         Token::Reps("21".to_string()),
-    //         Token::Reps("15".to_string()),
-    //         Token::Reps("9".to_string()),
-    //         Token::Movement("pull up".to_string()),
-    //         Token::Movement("thruster".to_string()),
-    //     ]);
-    // }
-
-    // #[test]
-    // fn test_strength_2() {
-    //     let input = "wl 2x(1+1) clean and jerk @70kg";
-    //     let mut lexer = Lexer::new(input);
-    //     let tokens = lexer.tokenize();
-
-    //     assert_eq!(tokens, vec![
-    //         Token::WorkoutType("ft".to_string()),
-    //         Token::Reps("21".to_string()),
-    //         Token::Reps("15".to_string()),
-    //         Token::Reps("9".to_string()),
-    //         Token::Movement("pull up".to_string()),
-    //         Token::Movement("thruster".to_string()),
+    //         Token::WorkoutType(WorkoutType::from_str("emom-10").unwrap()),
+    //         Token::RepType(RepType::from_str("10").unwrap()),
+    //         Token::Movement(Movement::from_str("pull up").unwrap()),
+    //         Token::RepType(RepType::from_str("5").unwrap()),
+    //         Token::Movement(Movement::from_str("push up").unwrap()),
     //     ]);
     // }
 }

@@ -18,7 +18,6 @@ use chrono::Local;
 
 use crate::lexer::Lexer;
 use crate::workout::Workout;
-use crate::workout_types::workout_type::WorkoutType;
 
 fn today() -> String {
     Local::now().format("%d-%m-%Y").to_string()
