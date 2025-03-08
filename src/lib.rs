@@ -9,6 +9,11 @@ pub mod weight;
 pub mod workout;
 pub mod workout_types;
 
+// TODO: Redirect methods for easier import
+pub use self::{
+    workout_types::workout_type::WorkoutType
+};
+
 use std::fs;
 use std::fs::OpenOptions;
 use std::io::Write;

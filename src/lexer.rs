@@ -5,7 +5,9 @@ use crate::movement::Movement;
 use crate::rep_types::rep_type::RepType;
 use crate::rm::RM;
 use crate::weight::Weight;
-use crate::workout_types::workout_type::WorkoutType;
+// use crate::workout_types::workout_type::WorkoutType;
+use crate::WorkoutType;
+
 
 #[derive(Debug, PartialEq)]
 pub enum Token {
