@@ -63,7 +63,6 @@ impl FromStr for Weight {
 }
 
 impl fmt::Display for Weight {
-
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         if self.weight_woman != self.weight_man {
             write!(

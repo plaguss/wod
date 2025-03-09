@@ -205,7 +205,9 @@ impl<'a> Lexer<'a> {
             // Push any pending number in the buffer
             process_buf(&mut buf, tokens);
         } else if number.contains("kg") || number.contains("%") {
-            tokens.push(Token::Weight(Weight::from_str(number.as_str()).expect("Wrong Weight format")));
+            tokens.push(Token::Weight(
+                Weight::from_str(number.as_str()).expect("Wrong Weight format"),
+            ));
         } else if number.contains("rm") {
             tokens.push(Token::RM(RM::from(number.to_string())));
         } else if number.contains("K")
