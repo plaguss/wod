@@ -33,7 +33,7 @@ impl FromStr for EMOM {
                 }
                 _ => {
                     if part.contains("m") | part.contains("s") {
-                        rest = Rest::from(part.to_string());
+                        rest = Rest::from_str(part).expect("Invalid Rest format");
                         continue;
                     }
     
@@ -71,19 +71,21 @@ pub struct Rest {
     pub unit: String
 }
 
-impl Rest {
-    pub fn from(rest: String) -> Self {
+impl FromStr for Rest {
+    type Err = String;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
         let mut duration = String::new();
         let mut unit = String::new();
     
-        for c in rest.chars() {
+        for c in s.chars() {
             if c.is_numeric() {
                 duration.push(c);
             } else {
                 unit.push(c);
             }
         }
-        Rest { duration: duration.parse().unwrap(), unit: unit }
+        Ok(Rest { duration: duration.parse().unwrap(), unit: unit })
     }
 }
 
@@ -157,14 +159,14 @@ mod tests {
     #[test]
     fn test_rest() {
         assert_eq!(
-            Rest::from("1m".to_string()),
+            Rest::from_str("1m").unwrap(),
             Rest {
                 duration: 1,
                 unit: "m".to_string()
             }
         );
         assert_eq!(
-            Rest::from("90s".to_string()),
+            Rest::from_str("90s").unwrap(),
             Rest {
                 duration: 90,
                 unit: "s".to_string()
