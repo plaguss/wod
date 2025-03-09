@@ -4,6 +4,7 @@ use std::str::FromStr;
 use crate::workout_types::amrap::AMRAP;
 use crate::workout_types::emom::EMOM;
 use crate::workout_types::for_time::ForTime;
+use crate::workout_types::rest::Rest;
 
 #[derive(Debug, PartialEq, Clone)]
 pub enum WorkoutType {
