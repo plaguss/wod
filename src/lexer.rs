@@ -205,7 +205,7 @@ impl<'a> Lexer<'a> {
             // Push any pending number in the buffer
             process_buf(&mut buf, tokens);
         } else if number.contains("kg") || number.contains("%") {
-            tokens.push(Token::Weight(Weight::from(number.to_string())));
+            tokens.push(Token::Weight(Weight::from_str(number.as_str()).expect("Wrong Weight format")));
         } else if number.contains("rm") {
             tokens.push(Token::RM(RM::from(number.to_string())));
         } else if number.contains("K")
@@ -244,7 +244,7 @@ mod tests {
 
     #[test]
     fn test_for_time() {
-        let input = "ft 21-15-9 pull up, thruster";
+        let input = "ft 21-15-9 pull up, thruster @43/30kg";
         let mut lexer = Lexer::new(input);
         let tokens = lexer.tokenize();
 
@@ -257,6 +257,8 @@ mod tests {
                 Token::RepType(RepType::from_str("9").unwrap()),
                 Token::Movement(Movement::from_str("pull up").unwrap()),
                 Token::Movement(Movement::from_str("thruster").unwrap()),
+                Token::At,
+                Token::Weight(Weight::from_str("43/30kg").unwrap()),
             ]
         );
     }
@@ -294,7 +296,7 @@ mod tests {
                 Token::RepType(RepType::from_str("5").unwrap()),
                 Token::Movement(Movement::from_str("snatch").unwrap()),
                 Token::At,
-                Token::Weight(Weight::from("70%".to_string())),
+                Token::Weight(Weight::from_str("70%").unwrap()),
             ]
         );
     }
@@ -314,7 +316,7 @@ mod tests {
                 Token::RepType(RepType::from_str("10").unwrap()),
                 Token::Movement(Movement::from_str("snatch").unwrap()),
                 Token::At,
-                Token::Weight(Weight::from("70%".to_string())),
+                Token::Weight(Weight::from_str("70%").unwrap()),
             ]
         );
     }
@@ -356,7 +358,7 @@ mod tests {
                 Token::Movement(Movement::from_str("front squat").unwrap()),
                 Token::Movement(Movement::from_str("split jerk").unwrap()),
                 Token::At,
-                Token::Weight(Weight::from("80kg".to_string())),
+                Token::Weight(Weight::from_str("80kg").unwrap()),
             ]
         );
     }
@@ -460,7 +462,7 @@ mod tests {
                 Token::RepType(RepType::from_str("12").unwrap()),
                 Token::Movement(Movement::from_str("power clean").unwrap()),
                 Token::At,
-                Token::Weight(Weight::from("60/40kg".to_string())),
+                Token::Weight(Weight::from_str("60/40kg").unwrap()),
                 Token::RepType(RepType::from_str("20cal").unwrap()),
                 Token::Movement(Movement::from_str("row").unwrap()),
             ]

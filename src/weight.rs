@@ -1,4 +1,5 @@
 use std::fmt;
+use std::str::FromStr;
 
 // Struct to deal with 70kg, 70%, 60/40kg, etc.
 #[derive(Clone, Debug, PartialEq)]
@@ -49,18 +50,20 @@ fn extract_unit(w: &str) -> (u32, u32, String) {
     )
 }
 
-impl Weight {
-    pub fn from(w: String) -> Self {
+impl FromStr for Weight {
+    type Err = String;
+    fn from_str(w: &str) -> Result<Self, Self::Err> {
         let (weight_man, weight_woman, unit) = extract_unit(&w);
-        Weight {
+        Ok(Weight {
             weight_man,
             weight_woman,
             unit,
-        }
+        })
     }
 }
 
 impl fmt::Display for Weight {
+
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         if self.weight_woman != self.weight_man {
             write!(
@@ -83,7 +86,7 @@ mod tests {
     #[test]
     fn test_weight() {
         assert_eq!(
-            Weight::from("70kg".to_string()),
+            Weight::from_str("70kg").unwrap(),
             Weight {
                 weight_man: 70,
                 weight_woman: 70,
@@ -91,7 +94,7 @@ mod tests {
             }
         );
         assert_eq!(
-            Weight::from("70%".to_string()),
+            Weight::from_str("70%").unwrap(),
             Weight {
                 weight_man: 70,
                 weight_woman: 70,
@@ -99,7 +102,7 @@ mod tests {
             }
         );
         assert_eq!(
-            Weight::from("60/40kg".to_string()),
+            Weight::from_str("60/40kg").unwrap(),
             Weight {
                 weight_man: 60,
                 weight_woman: 40,
@@ -112,15 +115,15 @@ mod tests {
     #[test]
     fn test_weight_display() {
         assert_eq!(
-            format!("{}", Weight::from("70kg".to_string())),
+            format!("{}", Weight::from_str("70kg").unwrap()),
             "70kg".to_string()
         );
         assert_eq!(
-            format!("{}", Weight::from("70%".to_string())),
+            format!("{}", Weight::from_str("70%").unwrap()),
             "70%".to_string()
         );
         assert_eq!(
-            format!("{}", Weight::from("60/40kg".to_string())),
+            format!("{}", Weight::from_str("60/40kg").unwrap()),
             "60/40kg".to_string()
         );
     }
