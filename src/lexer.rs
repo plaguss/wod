@@ -8,7 +8,6 @@ use crate::weight::Weight;
 // use crate::workout_types::workout_type::WorkoutType;
 use crate::WorkoutType;
 
-
 #[derive(Debug, PartialEq)]
 pub enum Token {
     // ft, amrap, emom, wl (what else?)

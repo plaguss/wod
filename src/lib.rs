@@ -10,12 +10,7 @@ pub mod workout;
 pub mod workout_types;
 
 // TODO: Redirect methods for easier import
-pub use self::{
-    workout_types::{
-        amrap::AMRAP,
-        workout_type::WorkoutType,
-    },
-};
+pub use self::workout_types::{amrap::AMRAP, workout_type::WorkoutType};
 
 use std::fs;
 use std::fs::OpenOptions;

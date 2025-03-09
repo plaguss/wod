@@ -8,7 +8,7 @@ pub struct EMOM {
     pub rounds: u16,
     pub every: u16,
     pub alternating: bool,
-    pub rest: Rest
+    pub rest: Rest,
 }
 
 impl FromStr for EMOM {
@@ -20,7 +20,10 @@ impl FromStr for EMOM {
         let mut alternating = false;
         let mut every = 1;
         let mut rounds = 1;
-        let mut rest = Rest { duration: 0, unit: "".to_string() };
+        let mut rest = Rest {
+            duration: 0,
+            unit: "".to_string(),
+        };
 
         let mut counter = 0;
         for part in parts.iter() {
@@ -36,7 +39,7 @@ impl FromStr for EMOM {
                         rest = Rest::from_str(part).expect("Invalid Rest format");
                         continue;
                     }
-    
+
                     if counter == 0 {
                         rounds = part
                             .parse::<u16>()
@@ -54,7 +57,7 @@ impl FromStr for EMOM {
             rounds,
             every,
             alternating,
-            rest
+            rest,
         });
     }
 }
@@ -68,7 +71,7 @@ impl fmt::Display for EMOM {
 #[derive(Debug, PartialEq, Clone)]
 pub struct Rest {
     pub duration: u16,
-    pub unit: String
+    pub unit: String,
 }
 
 impl FromStr for Rest {
@@ -77,7 +80,7 @@ impl FromStr for Rest {
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         let mut duration = String::new();
         let mut unit = String::new();
-    
+
         for c in s.chars() {
             if c.is_numeric() {
                 duration.push(c);
@@ -85,7 +88,10 @@ impl FromStr for Rest {
                 unit.push(c);
             }
         }
-        Ok(Rest { duration: duration.parse().unwrap(), unit: unit })
+        Ok(Rest {
+            duration: duration.parse().unwrap(),
+            unit: unit,
+        })
     }
 }
 
@@ -101,7 +107,10 @@ mod tests {
                 rounds: 10,
                 every: 1,
                 alternating: false,
-                rest: Rest { duration: 0, unit: "".to_string() }
+                rest: Rest {
+                    duration: 0,
+                    unit: "".to_string()
+                }
             }
         );
         assert_eq!(
@@ -110,7 +119,10 @@ mod tests {
                 rounds: 10,
                 every: 1,
                 alternating: true,
-                rest: Rest { duration: 0, unit: "".to_string() }
+                rest: Rest {
+                    duration: 0,
+                    unit: "".to_string()
+                }
             }
         );
         assert_eq!(
@@ -119,7 +131,10 @@ mod tests {
                 rounds: 10,
                 every: 2,
                 alternating: false,
-                rest: Rest { duration: 0, unit: "".to_string() }
+                rest: Rest {
+                    duration: 0,
+                    unit: "".to_string()
+                }
             }
         );
         assert_eq!(
@@ -128,7 +143,10 @@ mod tests {
                 rounds: 10,
                 every: 2,
                 alternating: true,
-                rest: Rest { duration: 0, unit: "".to_string() }
+                rest: Rest {
+                    duration: 0,
+                    unit: "".to_string()
+                }
             }
         );
         assert_eq!(
@@ -137,7 +155,10 @@ mod tests {
                 rounds: 10,
                 every: 1,
                 alternating: false,
-                rest: Rest { duration: 30, unit: "s".to_string() }
+                rest: Rest {
+                    duration: 30,
+                    unit: "s".to_string()
+                }
             }
         );
         assert_eq!(
@@ -146,7 +167,10 @@ mod tests {
                 rounds: 10,
                 every: 1,
                 alternating: true,
-                rest: Rest { duration: 30, unit: "s".to_string() }
+                rest: Rest {
+                    duration: 30,
+                    unit: "s".to_string()
+                }
             }
         );
     }
@@ -183,7 +207,10 @@ mod tests {
                     rounds: 10,
                     every: 1,
                     alternating: false,
-                    rest: Rest { duration: 0, unit: "".to_string() }
+                    rest: Rest {
+                        duration: 0,
+                        unit: "".to_string()
+                    }
                 }
             ),
             "EMOM 10 minutes"
