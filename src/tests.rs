@@ -24,18 +24,16 @@ mod tests {
         );
         let expected = "**For Time**\n21-15-9\n\n- Pull Up\n\n- Thruster At 43/30Kg\n\n";
         assert_eq!(workout.write(), expected);
-
     }
 
     // For weightlifting a small hint should be placed for what (4x2) means (Low priority)
     #[test]
     fn test_weightlifting_0() {
-        let workout = create_workout("wl 4x2 @ 85% snatch");
+        let workout = create_workout("wl 4x2 snatch @ 85%");
         assert_eq!(workout.movements.len(), 1);
         assert_eq!(workout.rep_types.len(), 2);
         assert_eq!(workout.workout_type, WorkoutType::Weightlifting);
-        let expected = "**Weightlifting**\n\n4x2 @ 85% snatch\n\n";
+        let expected = "**Weightlifting**\n\n4x2 snatch @ 85%\n\n";
         assert_eq!(workout.write(), expected);
-
     }
 }

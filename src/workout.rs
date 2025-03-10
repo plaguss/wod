@@ -3,6 +3,7 @@ use std::str::FromStr;
 use crate::lexer::{Lexer, Token};
 use crate::movement::Movement;
 use crate::rep_types::rep_type::RepType;
+use crate::weight::Weight;
 use crate::workout_types::workout_type::WorkoutType;
 
 #[derive(Debug, PartialEq)]
@@ -10,6 +11,7 @@ pub struct Workout {
     pub workout_type: WorkoutType,
     pub movements: Vec<Movement>,
     pub rep_types: Vec<RepType>,
+    pub weights: Vec<Weight>,
     // TODO: These aren't clear yet
     pub x: Option<Vec<Token>>,
     pub at: Option<Vec<Token>>,
@@ -22,6 +24,7 @@ impl Workout {
             workout_type: WorkoutType::from_str("ft").unwrap(),
             movements: Vec::new(),
             rep_types: Vec::new(),
+            weights: Vec::new(),
             x: None,
             at: None,
             rm: None,
@@ -209,6 +212,7 @@ mod tests {
                 RepType::from_str("15").unwrap(),
                 RepType::from_str("9").unwrap(),
             ],
+            weights: vec![],
             x: None,
             at: None,
             rm: None,
