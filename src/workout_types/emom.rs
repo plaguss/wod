@@ -115,7 +115,22 @@ impl FromStr for EMOM {
 
 impl fmt::Display for EMOM {
     fn fmt(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(formatter, "EMOM {} minutes", self.rounds)
+        let mut workout = format!("EMOM {} minutes", self.rounds);
+        if self.every != 1 {
+            workout.push_str(&format!("\n\nEvery {} minutes", self.every));
+        }
+        if self.rest.duration != 0 {
+            if self.every == 1 {
+                workout.push_str(&format!("\n\n{}", self.rest));
+            } else {
+                workout.push_str(&format!(", {}", self.rest));
+            }
+        }
+        if self.alternating {
+            workout.push_str(", alternating");
+        }
+
+        write!(formatter, "{}", workout)
     }
 }
 
@@ -220,6 +235,35 @@ mod tests {
                 }
             ),
             "EMOM 10 minutes"
+        );
+
+        assert_eq!(
+            format!("{}", EMOM::from_str("emom-10").unwrap()),
+            "EMOM 10 minutes"
+        );
+        assert_eq!(
+            format!("{}", EMOM::from_str("emom-10-alt").unwrap()),
+            "EMOM 10 minutes, alternating"
+        );
+        assert_eq!(
+            format!("{}", EMOM::from_str("emom-10-2").unwrap()),
+            "EMOM 10 minutes\n\nEvery 2 minutes"
+        );
+        assert_eq!(
+            format!("{}", EMOM::from_str("emom-10-2-alt").unwrap()),
+            "EMOM 10 minutes\n\nEvery 2 minutes, alternating"
+        );
+        assert_eq!(
+            format!("{}", EMOM::from_str("emom-10-30s").unwrap()),
+            "EMOM 10 minutes\n\nrest 30 seconds"
+        );
+        assert_eq!(
+            format!("{}", EMOM::from_str("emom-10-30s-alt").unwrap()),
+            "EMOM 10 minutes\n\nrest 30 seconds, alternating"
+        );
+        assert_eq!(
+            format!("{}", EMOM::from_str("emom-12-3-1m-alt").unwrap()),
+            "EMOM 12 minutes\n\nEvery 3 minutes, rest 1 minute, alternating"
         );
     }
 }

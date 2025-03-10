@@ -1,4 +1,5 @@
 use std::fmt;
+use std::str::FromStr;
 
 // Struct to deal with 1rm, 3rm, etc.
 #[derive(Clone, Debug, PartialEq)]
@@ -16,11 +17,11 @@ fn extract_rm(m: &str) -> u8 {
     num.parse().unwrap()
 }
 
-impl RM {
-    pub fn from(movement: String) -> Self {
-        RM {
-            num: extract_rm(&movement),
-        }
+impl FromStr for RM {
+    type Err = String;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        Ok(RM { num: extract_rm(s) })
     }
 }
 
@@ -30,8 +31,8 @@ mod tests {
 
     #[test]
     fn test_rm() {
-        assert_eq!(RM::from("1rm".to_string()), RM { num: 1 });
-        assert_eq!(RM::from("3rm".to_string()), RM { num: 3 });
-        assert_eq!(RM::from("5rm".to_string()), RM { num: 5 });
+        assert_eq!(RM::from_str("1rm").unwrap(), RM { num: 1 });
+        assert_eq!(RM::from_str("3rm").unwrap(), RM { num: 3 });
+        assert_eq!(RM::from_str("5rm").unwrap(), RM { num: 5 });
     }
 }

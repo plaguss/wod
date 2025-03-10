@@ -7,12 +7,14 @@ use crate::rep_types::distance::Distance;
 // 400/300m, etc. Use Weight as reference
 #[derive(Debug, PartialEq, Clone)]
 pub enum RepType {
-    // Default number of repetitions, e.g. 10 or whatever single number
+    /// Default number of repetitions, e.g. 10 or whatever single number
     Reps(u16),
-    // Distance, e.g. 100m, 5K
+    /// Distance, e.g. 100m, 5K
     Distance(Distance),
-    // Calories, e.g. 10cals
+    /// Calories, e.g. 10cals
     Cals(u16),
+    /// Max reps of a given movement in a time.
+    Max,
 }
 
 impl FromStr for RepType {
@@ -36,6 +38,10 @@ impl FromStr for RepType {
             return Ok(RepType::Cals(cals));
         }
 
+        if s == "max" {
+            return Ok(RepType::Max);
+        }
+
         // Check if it's a number
         if let Ok(reps) = s.parse::<u16>() {
             return Ok(RepType::Reps(reps));
@@ -51,6 +57,7 @@ impl fmt::Display for RepType {
             RepType::Reps(reps) => write!(formatter, "{}", reps),
             RepType::Cals(cals) => write!(formatter, "{} calories", cals),
             RepType::Distance(distance) => write!(formatter, "{}", distance),
+            RepType::Max => write!(formatter, "Max reps of"),
         }
     }
 }
@@ -71,5 +78,6 @@ mod tests {
             RepType::Distance(Distance::from("5k".to_string()))
         );
         assert_eq!(RepType::from_str("10cals").unwrap(), RepType::Cals(10));
+        assert_eq!(RepType::from_str("max").unwrap(), RepType::Max);
     }
 }

@@ -3,8 +3,9 @@ use std::str::FromStr;
 use crate::lexer::{Lexer, Token};
 use crate::movement::Movement;
 use crate::rep_types::rep_type::RepType;
+use crate::rm::RM;
 use crate::weight::Weight;
-use crate::workout_types::workout_type::WorkoutType;
+use crate::{ForTime, WorkoutType, AMRAP, EMOM};
 
 #[derive(Debug, PartialEq)]
 pub struct Workout {
@@ -15,10 +16,14 @@ pub struct Workout {
     // TODO: These aren't clear yet
     pub x: Option<Vec<Token>>,
     pub at: Option<Vec<Token>>,
-    pub rm: Option<Vec<Token>>,
+    pub plus: Option<Vec<Token>>,
+    pub rm: Option<Vec<RM>>,
+    tokens: Vec<Token>,
 }
 
 impl Workout {
+    // TODO: Create a new method that takes the tokens and parses them.
+
     pub fn default() -> Self {
         Workout {
             workout_type: WorkoutType::from_str("ft").unwrap(),
@@ -27,11 +32,14 @@ impl Workout {
             weights: Vec::new(),
             x: None,
             at: None,
+            plus: None,
             rm: None,
+            tokens: Vec::new(),
         }
     }
 
     pub fn parse(&mut self, tokens: Vec<Token>) {
+        // TODO: Update this to get the own the tokens instead of cloning them
         // When is time to print the workout, will have to order the things here
         for token in &tokens {
             match token {
@@ -43,6 +51,9 @@ impl Workout {
                 }
                 Token::RepType(rep_type) => {
                     self.rep_types.push(rep_type.clone());
+                }
+                Token::Weight(weight) => {
+                    self.weights.push(weight.clone());
                 }
                 Token::X => {
                     if self.x.is_none() {
@@ -56,16 +67,29 @@ impl Workout {
                     }
                     self.at.as_mut().unwrap().push(Token::At);
                 }
+                Token::Plus => {
+                    if self.plus.is_none() {
+                        self.plus = Some(Vec::new());
+                    }
+                    self.plus.as_mut().unwrap().push(Token::Plus);
+                }
+                Token::RM(rm) => {
+                    if self.rm.is_none() {
+                        self.rm = Some(Vec::new());
+                    }
+                    self.rm.as_mut().unwrap().push(rm.clone());
+                }
                 _ => {}
             }
         }
+        self.tokens = tokens;
     }
 
     // Method to write the workout to a string to be printed
     pub fn write(&self) -> String {
         // Should be dependent on the workout type???
         let mut workout = String::new();
-        workout.push_str(&format!("**{}**\n", self.workout_type));
+        workout.push_str(&format!("---\n\n**{}**\n\n", self.workout_type));
 
         // Continue with the types of workouts to print
         // TODO: Separate in different write_for_time... write_amrap... methods
@@ -77,23 +101,14 @@ impl Workout {
             WorkoutType::Weightlifting => {
                 workout.push_str(self.write_weightlifting().as_str());
             }
+            WorkoutType::EMOM(_emom) => {
+                workout.push_str(self.write_emom().as_str());
+            }
             // WorkoutType::Amrap(_amrap) => {
             //     workout.push_str(self.write_amrap().as_str());
             // }
-            // WorkoutType::Emom => {
-            //     workout.push_str(self.write_emom().as_str());
-            // }
             _ => {
-                // Default print, should be dependent on the workout type
-                for (i, movement) in self.movements.iter().enumerate() {
-                    workout.push_str(&format!("{}: {}\n", i + 1, movement));
-                }
-                for (i, rep) in self.rep_types.iter().enumerate() {
-                    workout.push_str(&format!("{}: {}\n", i + 1, rep));
-                }
-                for (i, rep_type) in self.rep_types.iter().enumerate() {
-                    workout.push_str(&format!("{}: {}\n", i + 1, rep_type));
-                }
+                eprintln!("Workout type not implemented {:?}", self.workout_type);
             }
         }
 
@@ -101,39 +116,172 @@ impl Workout {
     }
 
     fn write_for_time(&self) -> String {
+        // TODO: We need some kind of identifier for workouts that have reps informed as 21-15-9
+        // Check this behaviour within the tokens
+        fn check_contiguous_reps(tokens: &Vec<Token>) -> bool {
+            // Helper function to check whether there are two contiguous movements/rep types,
+            // e.g. 21-15-9 pull up, thruster, to help writing in such a format.
+            tokens.windows(2).any(|window| {
+                matches!(window[0], Token::RepType(_)) && matches!(window[1], Token::RepType(_))
+            })
+        }
+
         let mut workout = String::new();
 
-        let reps_formatted = self
-            .rep_types
-            .iter()
-            .map(|r| r.to_string())
-            .collect::<Vec<_>>()
-            .join("-");
-        workout.push_str(&format!("{}\n\n", reps_formatted));
-        // Format the Movements
-        for movement in self.movements.iter() {
-            workout.push_str(&format!("- {}\n\n", movement));
+        if check_contiguous_reps(&self.tokens) {
+            // Format the Reps
+            let reps_formatted = self
+                .rep_types
+                .iter()
+                .map(|r| r.to_string())
+                .collect::<Vec<_>>()
+                .join("-");
+            workout.push_str(&format!("{}\n\n", reps_formatted));
+            // Format the Movements
+            // In this case, the weights can be placed after the movements, and to associate
+            // them we need to check the tokens order.
+
+            // Iterate over the vector of tokens until we find the first Movement, from that point
+            // we can start adding the movements and the weights.
+            // To determine when to place the \n\n, a movement can have an associated weight.
+            // If we are in a movement, and the previous movement was one, we add the \n\n
+            let mut was_movement = false;
+            for token in self.tokens.iter() {
+                match token {
+                    Token::Movement(movement) => {
+                        if was_movement {
+                            workout.push_str("\n\n");
+                        }
+                        workout.push_str(&format!("- {}", movement));
+                        was_movement = true;
+                    }
+                    Token::Weight(weight) => {
+                        was_movement = false;
+                        workout.push_str(&format!(" At {}\n\n", weight));
+                    }
+                    _ => {}
+                }
+            }
+            // Add the last \n\n if the last token was a movement
+            if was_movement {
+                workout.push_str("\n\n");
+            }
+        } else {
+            let mut first_rep = true;
+            // Format the Movements
+            for token in self.tokens.iter().skip(1) {
+                match token {
+                    Token::RepType(rep_type) => {
+                        if first_rep {
+                            workout.push_str(&format!("- {} ", rep_type));
+                            first_rep = false;
+                        } else {
+                            workout.push_str(&format!("\n\n- {} ", rep_type));
+                        }
+                    }
+                    // We need to determine whether to add \n\n
+                    Token::Movement(movement) => {
+                        workout.push_str(&format!("{}", movement));
+                    }
+                    Token::Weight(weight) => {
+                        workout.push_str(&format!(" At {}", weight));
+                    }
+                    _ => {}
+                }
+            }
+            workout.push_str("\n\n");
         }
         workout
     }
 
+    // Weightlifting workout type will be formatted using directly the tokens:
+    // **Weightlifting**
+    // Expects Rep Types, with any x or + in between, then the movements, and the weight
     fn write_weightlifting(&self) -> String {
         let mut workout = String::new();
-        // THIS WORKOUT TYPE ISN'T PROPERLY WRITTEN, DON'T KNOW YET HOW TO DO IT
-        let reps_formatted = self
-            .rep_types
-            .iter()
-            .map(|r| r.to_string())
-            .collect::<Vec<_>>()
-            .join("--");
-        workout.push_str(&format!("{}\n\n", reps_formatted));
-        // Format the Movements
-        // for (i, rep) in self.reps.iter().enumerate() {
-        //     workout.push_str(&format!("{}: {}\n", i + 1, rep));
-        // }
-        for movement in self.movements.iter() {
-            workout.push_str(&format!("- {}\n\n", movement));
+        fn prepare_reps(
+            rep_types: &Vec<RepType>,
+            x: &Option<Vec<Token>>,
+            plus: &Option<Vec<Token>>,
+        ) -> String {
+            // The simpler case: 3x3
+            if plus.is_none() {
+                let mut formatted = rep_types
+                    .iter()
+                    .map(|m| m.to_string())
+                    .collect::<Vec<_>>()
+                    .join("x");
+                formatted.push(' ');
+                return formatted;
+            }
+            // Case of 2+2 (not sure I would write this way, but anyway)
+            if x.is_none() {
+                let mut formatted = rep_types
+                    .iter()
+                    .map(|m| m.to_string())
+                    .collect::<Vec<_>>()
+                    .join("+");
+                formatted.push(' ');
+                return formatted;
+            }
+            // Case of 2x(2+2)
+            let mut reps_str = String::new();
+            for (i, rep) in rep_types.iter().enumerate() {
+                reps_str.push_str(&format!("{}", rep));
+                if i == 0 {
+                    reps_str.push_str("x(");
+                    continue;
+                }
+                if i != rep_types.len() - 1 {
+                    reps_str.push_str("+");
+                }
+            }
+            reps_str.push_str(") ");
+            reps_str
         }
+        workout.push_str(&prepare_reps(&self.rep_types, &self.x, &self.plus));
+        // Format the Movements as a , separated list
+        let movements = self
+            .movements
+            .iter()
+            .map(|m| m.to_string())
+            .collect::<Vec<_>>()
+            .join(", ");
+        workout.push_str(&format!("{}", movements));
+        // NOTE: Could there be more than one weight?
+        workout.push_str(&format!(" At {}\n\n", self.weights[0]));
+        workout
+    }
+
+    fn write_emom(&self) -> String {
+        let mut workout = String::new();
+        // Format the Rounds
+        println!("{:?}", self.workout_type);
+        let mut first_rep = true;
+        // TODO: This is the same function used in the For Time (general case),
+        // Refactor to avoid code duplication
+        for token in self.tokens.iter().skip(1) {
+            match token {
+                Token::RepType(rep_type) => {
+                    if first_rep {
+                        workout.push_str(&format!("- {} ", rep_type));
+                        first_rep = false;
+                    } else {
+                        workout.push_str(&format!("\n\n- {} ", rep_type));
+                    }
+                }
+                // We need to determine whether to add \n\n
+                Token::Movement(movement) => {
+                    workout.push_str(&format!("{}", movement));
+                }
+                Token::Weight(weight) => {
+                    workout.push_str(&format!(" At {}", weight));
+                }
+                _ => {}
+            }
+        }
+        workout.push_str("\n\n");
+
         workout
     }
 }
@@ -194,13 +342,13 @@ mod tests {
         let mut workout = Workout::default();
         workout.parse(tokens);
 
-        let expected = "**For Time**\n21-15-9\n\n- Pull Up\n\n- Thruster\n\n";
+        let expected = "---\n\n**For Time**\n\n21-15-9\n\n- Pull Up\n\n- Thruster\n\n";
         assert_eq!(workout.write(), expected);
     }
 
     #[test]
     fn test_create_workout() {
-        let workout = "ft 21-15-9 pull up, thruster";
+        let workout = "ft 21-15-9 pull up, thruster @ 43/30kg";
         let expected = Workout {
             workout_type: WorkoutType::from_str("ft").unwrap(),
             movements: vec![
@@ -212,10 +360,21 @@ mod tests {
                 RepType::from_str("15").unwrap(),
                 RepType::from_str("9").unwrap(),
             ],
-            weights: vec![],
+            weights: vec![Weight::from_str("43/30kg").unwrap()],
             x: None,
-            at: None,
+            at: vec![Token::At].into(),
+            plus: None,
             rm: None,
+            tokens: vec![
+                Token::WorkoutType(WorkoutType::from_str("ft").unwrap()),
+                Token::RepType(RepType::from_str("21").unwrap()),
+                Token::RepType(RepType::from_str("15").unwrap()),
+                Token::RepType(RepType::from_str("9").unwrap()),
+                Token::Movement(Movement::from_str("pull up").unwrap()),
+                Token::Movement(Movement::from_str("thruster").unwrap()),
+                Token::At,
+                Token::Weight(Weight::from_str("43/30kg").unwrap()),
+            ],
         };
 
         assert_eq!(create_workout(workout), expected);

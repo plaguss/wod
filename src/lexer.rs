@@ -10,21 +10,25 @@ use crate::WorkoutType;
 
 #[derive(Debug, PartialEq)]
 pub enum Token {
-    // ft, amrap, emom, wl (what else?)
+    /// ft, amrap, emom, wl (what else?)
     WorkoutType(WorkoutType),
     // 21, (any number)
-    // cal, m (meters), s (seconds)
+    /// cal, m (meters), s (seconds), or number of reps
     RepType(RepType),
-    // Distance(Distance), // 5k, 10m, 1mile
-    // pull up, thruster
+    /// pull up, thruster
     Movement(Movement),
     // Special of weightlifting
     // 5x5, 3x(1+1), 1rm
-    X,              // X in 5x$
-    At,             // @ in @70%
-    Plus,           // + in 3x(1+1)
-    RM(RM),         // 1rm, these are dealt with in their own struct
-    Weight(Weight), // 60kg, 60/40kg, 70%
+    /// X in 5x2...
+    X,
+    /// @ in @70%
+    At,
+    /// + in 3x(1+1)
+    Plus,
+    /// 1rm
+    RM(RM),
+    /// 60kg, 60/40kg, 70%
+    Weight(Weight),
 }
 
 pub struct Lexer<'a> {
@@ -95,6 +99,7 @@ impl<'a> Lexer<'a> {
         // 60kg
         // 60/40kg
         // 70%
+        // max
         let mut result = String::new();
 
         while let Some(c) = self.current_char {
@@ -144,7 +149,6 @@ impl<'a> Lexer<'a> {
                 first_token = false;
                 continue;
             }
-
             match c {
                 '@' => {
                     // @70% or @60kg
@@ -209,13 +213,16 @@ impl<'a> Lexer<'a> {
                 Weight::from_str(number.as_str()).expect("Wrong Weight format"),
             ));
         } else if number.contains("rm") {
-            tokens.push(Token::RM(RM::from(number.to_string())));
+            tokens.push(Token::RM(
+                RM::from_str(number.as_str()).expect("Invalid RM"),
+            ));
         } else if number.contains("K")
             || number.contains("k")
             || number.contains("m")
             || number.contains("i")
             || number.contains("l")
             || number.contains("e")
+            || number.contains("a")
         {
             tokens.push(Token::RepType(
                 RepType::from_str(&number).expect("Invalid rep type"),
@@ -231,8 +238,13 @@ impl<'a> Lexer<'a> {
     }
 
     fn parse_alphabetic(&mut self, tokens: &mut Vec<Token>) {
-        let movement = self.read_movement();
-
+        let mut movement = self.read_movement();
+        // "max db snatch" or "max ring muscle up" will be a movement,
+        // We have to strip the "max" part if occurs and assign it the corresponding token
+        if movement.starts_with("max") {
+            movement = movement.replace("max ", "");
+            tokens.push(Token::RepType(RepType::Max));
+        }
         if !movement.is_empty() {
             let mov = Movement::from_str(&movement).expect("Invalid movement");
             tokens.push(Token::Movement(mov));
@@ -333,7 +345,7 @@ mod tests {
             tokens,
             vec![
                 Token::WorkoutType(WorkoutType::Weightlifting),
-                Token::RM(RM::from("1rm".to_string())),
+                Token::RM(RM::from_str("1rm").unwrap()),
                 Token::Movement(Movement::from_str("snatch").unwrap()),
             ]
         );
@@ -400,7 +412,7 @@ mod tests {
     }
 
     #[test]
-    fn test_amrap() {
+    fn test_amrap_0() {
         let input = "amrap-12 10 db snatch, 1 ring muscle up";
         let mut lexer = Lexer::new(input);
         let tokens = lexer.tokenize();
@@ -412,6 +424,22 @@ mod tests {
                 Token::RepType(RepType::from_str("10").unwrap()),
                 Token::Movement(Movement::from_str("db snatch").unwrap()),
                 Token::RepType(RepType::from_str("1").unwrap()),
+                Token::Movement(Movement::from_str("ring muscle up").unwrap()),
+            ]
+        );
+    }
+
+    #[test]
+    fn test_amrap_1() {
+        let input = "amrap-5 max ring muscle up";
+        let mut lexer = Lexer::new(input);
+        let tokens = lexer.tokenize();
+
+        assert_eq!(
+            tokens,
+            vec![
+                Token::WorkoutType(WorkoutType::from_str("amrap-5").unwrap()),
+                Token::RepType(RepType::from_str("max").unwrap()),
                 Token::Movement(Movement::from_str("ring muscle up").unwrap()),
             ]
         );
@@ -470,18 +498,26 @@ mod tests {
             ]
         );
     }
-    // #[test]
-    // fn test_emom_1() {
-    //     let input = "emom-10 10 pull up, 5 push up";
-    //     let mut lexer = Lexer::new(input);
-    //     let tokens = lexer.tokenize();
 
-    //     assert_eq!(tokens, vec![
-    //         Token::WorkoutType(WorkoutType::from_str("emom-10").unwrap()),
-    //         Token::RepType(RepType::from_str("10").unwrap()),
-    //         Token::Movement(Movement::from_str("pull up").unwrap()),
-    //         Token::RepType(RepType::from_str("5").unwrap()),
-    //         Token::Movement(Movement::from_str("push up").unwrap()),
-    //     ]);
-    // }
+    #[test]
+    fn test_emom_3() {
+        let input = "emom-12-3-1m 15cal row, 12 toes to bar, max db clean and jerk @ 22/15kg";
+        let mut lexer = Lexer::new(input);
+        let tokens = lexer.tokenize();
+
+        assert_eq!(
+            tokens,
+            vec![
+                Token::WorkoutType(WorkoutType::from_str("emom-12-3-1m").unwrap()),
+                Token::RepType(RepType::from_str("15cal").unwrap()),
+                Token::Movement(Movement::from_str("row").unwrap()),
+                Token::RepType(RepType::from_str("12").unwrap()),
+                Token::Movement(Movement::from_str("toes to bar").unwrap()),
+                Token::RepType(RepType::from_str("max").unwrap()),
+                Token::Movement(Movement::from_str("db clean and jerk").unwrap()),
+                Token::At,
+                Token::Weight(Weight::from_str("22/15kg").unwrap()),
+            ]
+        );
+    }
 }
