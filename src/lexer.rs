@@ -1,36 +1,76 @@
 use std::str::{Chars, FromStr};
 
-// use crate::distance::Distance;
 use crate::movement::Movement;
 use crate::rep_types::rep_type::RepType;
 use crate::rm::RM;
 use crate::weight::Weight;
-// use crate::workout_types::workout_type::WorkoutType;
 use crate::WorkoutType;
 
 #[derive(Debug, PartialEq)]
 pub enum Token {
-    /// ft, amrap, emom, wl (what else?)
+    /// Represents different types of workouts such as ft (for time), amrap (as many reps as possible),
+    /// emom (every minute on the minute), wl (weightlifting), and potentially other types.
     WorkoutType(WorkoutType),
-    // 21, (any number)
-    /// cal, m (meters), s (seconds), or number of reps
+    /// Denotes the type of repetition or measurement used in the workout, such as cal (calories), m (meters),
+    /// s (seconds), or a specific number of repetitions.
     RepType(RepType),
-    /// pull up, thruster
+    /// Specifies the movement or exercise being performed, such as "pull up" or "thruster".
     Movement(Movement),
-    // Special of weightlifting
-    // 5x5, 3x(1+1), 1rm
-    /// X in 5x2...
+    /// Special of weightlifting
+    /// Represents the 'X' in a set notation like '5x2', indicating the number of sets.
     X,
-    /// @ in @70%
+    /// Represents the '@' symbol used in notations like '@70%', which could indicate a percentage of a maximum.
     At,
-    /// + in 3x(1+1)
+    /// Represents the '+' symbol used in notations like '3x(1+1)', indicating an additional repetition or set.
     Plus,
-    /// 1rm
+    /// Represents the '1rm' notation, which stands for 'one repetition maximum', indicating the maximum weight
+    /// that can be lifted for one repetition.
     RM(RM),
-    /// 60kg, 60/40kg, 70%
+    /// Denotes the weight used in the exercise, which can be specified in different formats such as '60kg',
+    /// '60/40kg' for split weights, or '70%' for a percentage of a maximum.
     Weight(Weight),
 }
 
+/// Represents a lexical analyzer for parsing workout input strings.
+///
+/// The "Lexer" struct is designed to tokenize a string input representing a workout routine.
+/// It reads through the input character by character, identifying and categorizing different
+/// components of the routine into tokens.
+///
+/// # Examples
+///
+/// ```
+/// use std::str::FromStr;
+/// use wod::lexer::{Lexer, Token};
+/// use wod::movement::Movement;
+/// use wod::RepType;
+/// use wod::rm::RM;
+/// use wod::weight::Weight;
+/// use wod::WorkoutType;
+///
+/// let input = "ft 21-15-9 pull up, thruster @43/30kg";
+/// let mut lexer = Lexer::new(input);
+/// let tokens = lexer.tokenize();
+///
+/// assert_eq!(
+///     tokens,
+///     vec![
+///         Token::WorkoutType(WorkoutType::from_str("ft").unwrap()),
+///         Token::RepType(RepType::from_str("21").unwrap()),
+///         Token::RepType(RepType::from_str("15").unwrap()),
+///         Token::RepType(RepType::from_str("9").unwrap()),
+///         Token::Movement(Movement::from_str("pull up").unwrap()),
+///         Token::Movement(Movement::from_str("thruster").unwrap()),
+///         Token::At,
+///         Token::Weight(Weight::from_str("43/30kg").unwrap()),
+///     ]
+/// );
+/// ```
+///
+/// # Fields
+///
+/// * `input` - An iterator over the characters of the input string.
+/// * `current_char` - The current character being analyzed by the lexer.
 pub struct Lexer<'a> {
     input: Chars<'a>,
     current_char: Option<char>,

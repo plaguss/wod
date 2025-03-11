@@ -1,6 +1,5 @@
 mod tests;
 
-// pub mod distance;
 pub mod lexer;
 pub mod movement;
 pub mod rep_types;
@@ -9,9 +8,17 @@ pub mod weight;
 pub mod workout;
 pub mod workout_types;
 
-// TODO: Redirect methods for easier import
+pub use self::movement::Movement;
+pub use self::rm::RM;
+pub use self::weight::Weight;
+pub use self::workout::{Workout, create_workout};
+
 pub use self::workout_types::{
     amrap::AMRAP, emom::EMOM, for_time::ForTime, rest::Rest, workout_type::WorkoutType,
+};
+
+pub use self::rep_types::{
+    rep_type::RepType, distance::Distance
 };
 
 use std::fs;
@@ -22,15 +29,15 @@ use std::path::PathBuf;
 use chrono::Local;
 
 use crate::lexer::Lexer;
-use crate::workout::Workout;
 
 fn today() -> String {
     Local::now().format("%d-%m-%Y").to_string()
 }
 
+/// Get the default filename for the workout of the day
+/// The filename is in the format "wod-<date>.md"
 pub fn default_filename() -> String {
     format!("wod-{}.md", today())
-    // PathBuf::from(format!("wod-{}.md", today()))
 }
 
 // Run the default program, "wod 'date-filename.md'"
@@ -66,12 +73,14 @@ pub fn run_base(mut filename: PathBuf, force: &bool) -> Result<(), Box<dyn std::
         // Currently there's no way of informing the categories/tags, let it for later
         format!(
             r#"---
-title: "WOD for {}"
+title: "{}"
 date: {}
 draft: false
 ---
 
+Workout for today, {}.
 "#,
+            today(),
             today(),
             today()
         )
@@ -82,14 +91,8 @@ draft: false
 }
 
 pub fn run_add_workout(filename: PathBuf, workout: &str) -> Result<(), Box<dyn std::error::Error>> {
-    // This command should add a workout to the file passed as argument
-    // If the file doesn't exist, it should create it
-    // If the file exists, it should append the workout to the file
-    let mut lexer = Lexer::new(workout);
-    let tokens = lexer.tokenize();
-    let mut workout = Workout::default();
-    workout.parse(tokens);
-    let content = workout.write();
+    let wkt = create_workout(workout);
+    let content = wkt.write();
 
     let mut file = OpenOptions::new()
         .append(true)

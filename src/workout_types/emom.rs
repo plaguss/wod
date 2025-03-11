@@ -2,6 +2,7 @@ use std::fmt;
 use std::str::FromStr;
 
 use crate::workout_types::rest::Rest;
+
 /// Represents an Every Minute On the Minute (EMOM) workout.
 ///
 /// The `EMOM` struct contains the number of minutes to perform the workout,

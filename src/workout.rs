@@ -89,19 +89,18 @@ impl Workout {
     pub fn write(&self) -> String {
         // Should be dependent on the workout type???
         let mut workout = String::new();
-        workout.push_str(&format!("---\n\n**{}**\n\n", self.workout_type));
-
-        // Continue with the types of workouts to print
-        // TODO: Separate in different write_for_time... write_amrap... methods
 
         match &self.workout_type {
             WorkoutType::ForTime(_ft) => {
+                workout.push_str(&self.get_header("ft"));
                 workout.push_str(self.write_for_time().as_str());
             }
             WorkoutType::Weightlifting => {
+                workout.push_str(&self.get_header("wl"));
                 workout.push_str(self.write_weightlifting().as_str());
             }
             WorkoutType::EMOM(_emom) => {
+                workout.push_str(&self.get_header("emom"));
                 workout.push_str(self.write_emom().as_str());
             }
             // WorkoutType::Amrap(_amrap) => {
@@ -113,6 +112,31 @@ impl Workout {
         }
 
         workout
+    }
+
+    /// Get the header for the workout
+    /// The header will be the workout type in bold, and the rest of the text in normal font.
+    /// An initial --- separator to allow differentiating the blocks in the WOD.
+    fn get_header(&self, workout_type: &str) -> String {
+        if workout_type == "emom" {
+            let header = format!("{}", self.workout_type);
+            let separator = "\n\n";
+            let formatted_header = header
+                .split(separator)
+                .enumerate()
+                .map(|(index, part)| {
+                        if index == 0 {
+                            format!("**{}**", part)
+                        } else {
+                            part.to_string()
+                        }
+                    })
+                .collect::<Vec<String>>()
+                .join(separator);
+            return format!("\n\n---\n\n{}\n\n", formatted_header)
+        } else {
+            return format!("\n\n---\n\n**{}**\n\n", self.workout_type)
+        }
     }
 
     fn write_for_time(&self) -> String {
@@ -342,7 +366,7 @@ mod tests {
         let mut workout = Workout::default();
         workout.parse(tokens);
 
-        let expected = "---\n\n**For Time**\n\n21-15-9\n\n- Pull Up\n\n- Thruster\n\n";
+        let expected = "\n\n---\n\n**For Time**\n\n21-15-9\n\n- Pull Up\n\n- Thruster\n\n";
         assert_eq!(workout.write(), expected);
     }
 

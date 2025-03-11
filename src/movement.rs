@@ -1,11 +1,11 @@
 use std::fmt;
-/// A list of the movements that can be performed.
-/// For reference: https://www.crossfit.com/crossfit-movements
+// For reference: https://www.crossfit.com/crossfit-movements
 use std::str::FromStr;
 use strsim::levenshtein;
 
 // TODO: Move this to an Enum, try to implement a FromStr trait
 // Display and different checks for the movement creation.
+// A list of the movements that can be performed.
 static MOVEMENTS: &[&str] = &[
     // Squat movements
     "air squat",
@@ -104,6 +104,19 @@ static MOVEMENTS: &[&str] = &[
     "devil press",
 ];
 
+/// Represents various types of movements that can be performed in a workout.
+///
+/// This enum includes a wide range of exercises from weightlifting and bodyweight training
+/// to cardio and Olympic lifting. Each variant corresponds to a specific movement.
+///
+/// # Examples
+///
+/// ```
+/// use wod::movement::Movement;
+///
+/// let movement = Movement::AirSquat;
+/// println!("Movement: {}", movement);
+/// ```
 #[derive(Clone, Debug, PartialEq)]
 pub enum Movement {
     AirSquat,

@@ -1,9 +1,32 @@
 use std::fmt;
 use std::str::FromStr;
 
+/// Represents a rest period with a specified duration and unit.
+///
+/// # Examples
+/// ```
+/// use wod::Rest;
+///
+/// let rest: Rest = "1m".parse().unwrap();
+///
+/// assert_eq!(rest.duration, 1);
+/// assert_eq!(rest.unit, "m");
+/// ```
+///
+/// # Display
+/// The "Rest" struct implements the "Display" trait, which allows it to be formatted as a string.
+/// ```
+/// use wod::Rest;
+///
+/// let rest: Rest = "1m".parse().unwrap();
+///
+/// assert_eq!(format!("{}", rest), "rest 1 minute");
+/// ```
 #[derive(Debug, PartialEq, Clone)]
 pub struct Rest {
+    /// The length of the rest period.
     pub duration: u16,
+    /// The unit of measurement for the rest period (e.g., "s" for seconds, "m" for minutes).
     pub unit: String,
 }
 
@@ -35,17 +58,6 @@ impl fmt::Display for Rest {
             "s" => "seconds",
             _ => "unknown",
         };
-        // let mut rest = format!("rest {} {}}", self.rounds, unit);
-        // if self.every != 1 {
-        //     workout.push_str(&format!("\n\nEvery {} minutes", self.every));
-        // }
-        // if self.rest.duration != 0 {
-        //     workout.push_str(&format!(", {}", self.rest));
-        // }
-        // if self.alternating {
-        //     workout.push_str(", alternating");
-        // }
-        // workout.push_str("\n\n");
         write!(formatter, "rest {} {}", self.duration, unit)
     }
 }

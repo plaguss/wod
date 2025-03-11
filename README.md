@@ -38,13 +38,6 @@ https://github.com/nunocoracao/blowfish
 
 deploy to netlify: https://www.netlify.com/blog/2016/10/27/a-step-by-step-guide-deploying-a-static-site-or-single-page-app/
 
-## TODO LIST
-
-- [ ] Write something to the file (initially the same content provided)
-- [ ] Check if exists, and then append to the file
-- [ ] Parse blocks/workouts to the corresponding structs
-    Should be written at the end (and properly as markdown)
-
 ---
 Example commands:
 
@@ -88,3 +81,20 @@ FT REP-REP-REP... MOV, MOV
 And to the answer
 
 - that would be perfect. I will go with Blowfish, and would like a free option to deploy the blog. Maybe using netlify??
+
+## How to use
+
+Development testing.
+
+### Create a wod file
+
+```shell
+cargo run 11-03-2025.md  # Filename is optional
+```
+
+
+### Add a workout
+
+```shell
+cargo run -- add "ft 21-15-9 thruster,pull up" --filename 11-03-2025.md
+```
