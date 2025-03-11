@@ -1,12 +1,58 @@
 use std::fmt;
 use std::str::FromStr;
 
-// Struct to deal with 70kg, 70%, 60/40kg, etc.
+/// Represents weight information for both men and women, along with the unit of measurement.
+///
+/// # Examples
+///
+/// ## Creating a `Weight` instance
+///
+/// You can create a `Weight` instance by parsing a string using the `from_str` method.
+///
+/// ```
+/// use wod::weight::Weight;
+///
+/// let weight = Weight::from_str("70kg").unwrap();
+/// assert_eq!(weight, Weight {
+///     weight_man: 70,
+///     weight_woman: 70,
+///     unit: "kg".to_string(),
+/// });
+/// ```
+///
+/// Or inderectly by parsing the string.
+///
+/// ```
+/// use wod::weight::Weight;
+/// let weight: Weight = "70kg".parse().unwrap();
+/// assert_eq!(
+///     weight,
+///     Weight {
+///        weight_man: 70,
+///        weight_woman: 70,
+///        unit: "kg".to_string()
+///     }
+/// );
+///
+///
+/// ## Displaying a `Weight` instance
+///
+/// The `Weight` will be displayed as is.
+///
+/// ```
+/// use wod::weight::Weight;
+///
+/// let weight = Weight::from_str("70kg").unwrap();
+/// assert_eq!(format!("{}", weight), "70kg".to_string());
+/// ```
 #[derive(Clone, Debug, PartialEq)]
 pub struct Weight {
-    weight_man: u32,
-    weight_woman: u32,
-    unit: String,
+    /// Weight for men.
+    pub weight_man: u32,
+    /// Weight for women.
+    pub weight_woman: u32,
+    /// Unit of measurement (e.g., "kg", "lbs").
+    pub unit: String,
 }
 
 // If a woman's weight is not informed, it will be the same
@@ -42,7 +88,6 @@ fn extract_unit(w: &str) -> (u32, u32, String) {
         weight_woman
     };
 
-    // unwrap and parse to cast the string
     (
         weight_man.parse().unwrap(),
         weight_woman.parse().unwrap(),
@@ -124,6 +169,19 @@ mod tests {
         assert_eq!(
             format!("{}", Weight::from_str("60/40kg").unwrap()),
             "60/40kg".to_string()
+        );
+    }
+
+    #[test]
+    fn test_parse() {
+        let weight: Weight = "70kg".parse().unwrap();
+        assert_eq!(
+            weight,
+            Weight {
+                weight_man: 70,
+                weight_woman: 70,
+                unit: "kg".to_string()
+            }
         );
     }
 }
