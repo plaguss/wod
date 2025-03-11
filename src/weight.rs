@@ -5,11 +5,12 @@ use std::str::FromStr;
 ///
 /// # Examples
 ///
-/// ## Creating a `Weight` instance
+/// ## Creating a "Weight" instance
 ///
-/// You can create a `Weight` instance by parsing a string using the `from_str` method.
+/// You can create a "Weight" instance by parsing a string using the "from_str" method.
 ///
 /// ```
+/// use std::str::FromStr;
 /// use wod::weight::Weight;
 ///
 /// let weight = Weight::from_str("70kg").unwrap();
@@ -33,16 +34,16 @@ use std::str::FromStr;
 ///        unit: "kg".to_string()
 ///     }
 /// );
+/// ```
 ///
+/// ## Displaying a "Weight" instance
 ///
-/// ## Displaying a `Weight` instance
-///
-/// The `Weight` will be displayed as is.
+/// The "Weight" will be displayed as is.
 ///
 /// ```
 /// use wod::weight::Weight;
 ///
-/// let weight = Weight::from_str("70kg").unwrap();
+/// let weight: Weight = "70kg".parse().unwrap();
 /// assert_eq!(format!("{}", weight), "70kg".to_string());
 /// ```
 #[derive(Clone, Debug, PartialEq)]
