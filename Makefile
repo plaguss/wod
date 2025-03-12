@@ -9,6 +9,7 @@ lint:
 	cargo fmt --all -- --check
 	cargo clippy --tests -- -D warnings
 
-.PHONY: test
-test:
-	cargo test
+.PHONY: test-all
+test-all:
+	cargo test --lib
+	cargo test --doc
