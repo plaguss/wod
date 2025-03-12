@@ -5,7 +5,7 @@ use std::path::PathBuf;
 use clap::Parser;
 
 use cli::{Cli, Commands};
-use wod::{run_add_workout, run_base};
+use wod::{run_base, run_add_wod_from_file, run_add_workout};
 
 fn main() {
     let cli = Cli::parse();
@@ -21,7 +21,15 @@ fn main() {
         None => {
             // The base command "wod 'date-filename.md'"
             let filename = PathBuf::from(cli.filename.to_string());
-            let _ = run_base(filename, &cli.force);
+            if cli.wodfile.is_some() {
+                // Check/Parse the filename
+                let wodfile = PathBuf::from(cli.wodfile.unwrap());
+                println!("Creating file from WOD file: {}", wodfile.display());
+                let _ = run_add_wod_from_file(filename, wodfile);
+            } else {
+                println!("Creating file: {}", filename.display());
+                let _ = run_base(filename, &cli.force);
+            }
         }
     }
 }

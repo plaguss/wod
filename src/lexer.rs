@@ -238,7 +238,6 @@ impl<'a> Lexer<'a> {
                         process_buf(&mut buf, tokens);
                     }
                     _ => {
-                        println!("c on buf: {}", c);
                         buf.push(c)
                     }
                 }

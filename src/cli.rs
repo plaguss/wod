@@ -12,10 +12,15 @@ pub struct Cli {
     #[arg(value_name = "FILENAME", default_value_t = default_filename())]
     pub filename: String,
 
+    /// Optional name to operate on
+    #[arg(short, long, value_name = "FILE")]
+    pub wodfile: Option<String>,
+
+    /// Subcommands
     #[command(subcommand)]
     pub command: Option<Commands>,
 
-    // TODO: Add option to overwrite the file
+    /// Force overwrite of existing file
     #[arg(short, long, default_value = "false")]
     pub force: bool,
 }
