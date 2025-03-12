@@ -9,44 +9,32 @@ use crate::rep_types::split_gender_unit;
 ///
 /// ## Creating a "Cals" instance
 ///
-/// You can create a "Weight" instance by parsing a string using the "from_str" method.
+/// You can create a "Cals" instance by parsing a string.
 ///
 /// ```
-/// use std::str::FromStr;
-/// use wod::weight::Weight;
+/// use wod::Cals;
 ///
-/// let weight = Weight::from_str("70kg").unwrap();
-/// assert_eq!(weight, Weight {
-///     weight_man: 70,
-///     weight_woman: 70,
-///     unit: "kg".to_string(),
-/// });
-/// ```
-///
-/// Or indirectly by parsing the string.
-///
-/// ```
-/// use wod::weight::Weight;
-/// let weight: Weight = "70kg".parse().unwrap();
+/// let cals: Cals = "100cal".parse().unwrap();
 /// assert_eq!(
-///     weight,
-///     Weight {
-///        weight_man: 70,
-///        weight_woman: 70,
-///        unit: "kg".to_string()
+///     cals,
+///     Cals {
+///        cals_man: 100,
+///        cals_woman: 100,
 ///     }
 /// );
 /// ```
 ///
-/// ## Displaying a "Weight" instance
+/// ## Displaying a "Cals" instance
 ///
-/// The "Weight" will be displayed as is.
+/// The "Cals" will be displayed as is.
 ///
 /// ```
-/// use wod::weight::Weight;
+/// use wod::Cals;
 ///
-/// let weight: Weight = "70kg".parse().unwrap();
-/// assert_eq!(format!("{}", weight), "70kg".to_string());
+/// let cals: Cals = "100cal".parse().unwrap();
+/// assert_eq!(format!("{}", cals), "100 calories".to_string());
+/// let cals_mf: Cals = "100/80cal".parse().unwrap();
+/// assert_eq!(format!("{}", cals_mf), "100/80 calories".to_string());
 /// ```
 #[derive(Clone, Debug, PartialEq)]
 pub struct Cals {
@@ -59,7 +47,7 @@ pub struct Cals {
 impl FromStr for Cals {
     type Err = String;
     fn from_str(w: &str) -> Result<Self, Self::Err> {
-        let (cals_man, cals_woman, unit) = split_gender_unit(w);
+        let (cals_man, cals_woman, _unit) = split_gender_unit(w);
         Ok(Cals {
             cals_man,
             cals_woman,
@@ -115,5 +103,4 @@ mod tests {
             "100/80 calories".to_string()
         );
     }
-
 }

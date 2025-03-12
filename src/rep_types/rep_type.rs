@@ -1,7 +1,7 @@
 use std::fmt;
 use std::str::FromStr;
 
-use crate::rep_types::distance::Distance;
+use crate::rep_types::{cals::Cals, distance::Distance};
 
 /// TODO: All of these must take into account men/woman, so 30/20 cals, 20/15 (for reps),
 /// Represents different types of repetitions or measures in a workout.
@@ -29,8 +29,8 @@ pub enum RepType {
     Reps(u16),
     /// Distance, e.g. 100m, 5K
     Distance(Distance),
-    /// Calories, e.g. 10cals
-    Cals(u16),
+    /// Calories, e.g. 10cal, 100/80cal
+    Cals(Cals),
     /// Max reps of a given movement in a time.
     Max,
 }
@@ -44,19 +44,11 @@ impl FromStr for RepType {
             return Ok(RepType::Distance(
                 s.parse::<Distance>().expect("Invalid distance"),
             ));
-            // return Ok(RepType::Distance(Distance::from(s.to_string())));
         }
 
-        // Check if it's a number followed by "cals"
+        // Check if it's a number followed by "cal"
         if s.contains("cal") {
-            let parts: Vec<&str> = s.split("cal").collect();
-            if parts.len() != 2 {
-                return Err("Invalid rep type".to_string());
-            }
-            let cals = parts[0]
-                .parse::<u16>()
-                .map_err(|_| "Invalid number format".to_string())?;
-            return Ok(RepType::Cals(cals));
+            return Ok(RepType::Cals(s.parse::<Cals>().expect("Invalid calories")));
         }
 
         if s == "max" {
@@ -76,7 +68,7 @@ impl fmt::Display for RepType {
     fn fmt(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
             RepType::Reps(reps) => write!(formatter, "{}", reps),
-            RepType::Cals(cals) => write!(formatter, "{} calories", cals),
+            RepType::Cals(cals) => write!(formatter, "{}", cals),
             RepType::Distance(distance) => write!(formatter, "{}", distance),
             RepType::Max => write!(formatter, "Max reps of"),
         }
@@ -98,7 +90,11 @@ mod tests {
             RepType::from_str("5k").unwrap(),
             RepType::Distance("5k".parse::<Distance>().unwrap())
         );
-        assert_eq!(RepType::from_str("10cals").unwrap(), RepType::Cals(10));
+        // assert_eq!(RepType::from_str("10cals").unwrap(), RepType::Cals(10));
+        assert_eq!(
+            RepType::from_str("10cal").unwrap(),
+            RepType::Cals("10cal".parse::<Cals>().unwrap())
+        );
         assert_eq!(RepType::from_str("max").unwrap(), RepType::Max);
     }
 
@@ -109,7 +105,10 @@ mod tests {
             format!("{}", RepType::Distance("100m".parse().unwrap())),
             "100m".to_string()
         );
-        assert_eq!(format!("{}", RepType::Cals(10)), "10 calories".to_string());
+        assert_eq!(
+            format!("{}", RepType::from_str("10cal").unwrap()),
+            "10 calories".to_string()
+        );
         assert_eq!(format!("{}", RepType::Max), "Max reps of".to_string());
     }
 }
