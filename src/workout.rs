@@ -5,7 +5,7 @@ use crate::movement::Movement;
 use crate::rep_types::rep_type::RepType;
 use crate::rm::RM;
 use crate::weight::Weight;
-use crate::{ForTime, WorkoutType, AMRAP, EMOM};
+use crate::WorkoutType;
 
 #[derive(Debug, PartialEq)]
 pub struct Workout {
@@ -21,10 +21,8 @@ pub struct Workout {
     tokens: Vec<Token>,
 }
 
-impl Workout {
-    // TODO: Create a new method that takes the tokens and parses them.
-
-    pub fn default() -> Self {
+impl Default for Workout {
+    fn default() -> Self {
         Workout {
             workout_type: WorkoutType::from_str("ft").unwrap(),
             movements: Vec::new(),
@@ -37,6 +35,10 @@ impl Workout {
             tokens: Vec::new(),
         }
     }
+}
+
+impl Workout {
+    // TODO: Create a new method that takes the tokens and parses them.
 
     pub fn parse(&mut self, tokens: Vec<Token>) {
         // TODO: Update this to get the own the tokens instead of cloning them
@@ -79,7 +81,6 @@ impl Workout {
                     }
                     self.rm.as_mut().unwrap().push(rm.clone());
                 }
-                _ => {}
             }
         }
         self.tokens = tokens;
@@ -133,16 +134,16 @@ impl Workout {
                 })
                 .collect::<Vec<String>>()
                 .join(separator);
-            return format!("\n\n---\n\n{}\n\n", formatted_header);
+            format!("\n\n---\n\n{}\n\n", formatted_header)
         } else {
-            return format!("\n\n---\n\n**{}**\n\n", self.workout_type);
+            format!("\n\n---\n\n**{}**\n\n", self.workout_type)
         }
     }
 
     fn write_for_time(&self) -> String {
         // TODO: We need some kind of identifier for workouts that have reps informed as 21-15-9
         // Check this behaviour within the tokens
-        fn check_contiguous_reps(tokens: &Vec<Token>) -> bool {
+        fn check_contiguous_reps(tokens: &[Token]) -> bool {
             // Helper function to check whether there are two contiguous movements/rep types,
             // e.g. 21-15-9 pull up, thruster, to help writing in such a format.
             tokens.windows(2).any(|window| {
@@ -224,7 +225,7 @@ impl Workout {
     fn write_weightlifting(&self) -> String {
         let mut workout = String::new();
         fn prepare_reps(
-            rep_types: &Vec<RepType>,
+            rep_types: &[RepType],
             x: &Option<Vec<Token>>,
             plus: &Option<Vec<Token>>,
         ) -> String {
@@ -257,7 +258,7 @@ impl Workout {
                     continue;
                 }
                 if i != rep_types.len() - 1 {
-                    reps_str.push_str("+");
+                    reps_str.push('+');
                 }
             }
             reps_str.push_str(") ");
@@ -271,7 +272,8 @@ impl Workout {
             .map(|m| m.to_string())
             .collect::<Vec<_>>()
             .join(", ");
-        workout.push_str(&format!("{}", movements));
+
+        workout.push_str(&movements.to_string());
         // NOTE: Could there be more than one weight?
         workout.push_str(&format!(" At {}\n\n", self.weights[0]));
         workout

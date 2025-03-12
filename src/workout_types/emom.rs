@@ -67,7 +67,7 @@ impl FromStr for EMOM {
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         // Split the string into number part and name part
-        let parts: Vec<&str> = s.split("-").collect();
+        let parts: Vec<&str> = s.split('-').collect();
         let mut alternating = false;
         let mut every = 1;
         let mut rounds = 1;
@@ -78,15 +78,15 @@ impl FromStr for EMOM {
 
         let mut counter = 0;
         for part in parts.iter() {
-            match part {
-                &"emom" => {
+            match *part {
+                "emom" => {
                     continue;
                 }
-                &"alt" => {
+                "alt" => {
                     alternating = true;
                 }
                 _ => {
-                    if part.contains("m") | part.contains("s") {
+                    if part.contains('m') | part.contains('s') {
                         rest = Rest::from_str(part).expect("Invalid Rest format");
                         continue;
                     }

@@ -5,7 +5,7 @@ use crate::rep_types::distance::Distance;
 
 /// TODO: All of these must take into account men/woman, so 30/20 cals, 20/15 (for reps),
 /// Represents different types of repetitions or measures in a workout.
-/// 
+///
 /// This enum can be used to specify the type of repetition, distance, calories, or
 /// maximum reps in a workout routine.
 ///
@@ -40,8 +40,10 @@ impl FromStr for RepType {
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         // Check if it's a distance, e.g. 100m, 5K
-        if s.ends_with("m") || s.to_lowercase().ends_with("k") {
-            return Ok(RepType::Distance(s.parse::<Distance>().expect("Invalid distance")));
+        if s.ends_with('m') || s.to_lowercase().ends_with('k') {
+            return Ok(RepType::Distance(
+                s.parse::<Distance>().expect("Invalid distance"),
+            ));
             // return Ok(RepType::Distance(Distance::from(s.to_string())));
         }
 
@@ -103,7 +105,10 @@ mod tests {
     #[test]
     fn test_rep_type_display() {
         assert_eq!(format!("{}", RepType::Reps(10)), "10".to_string());
-        assert_eq!(format!("{}", RepType::Distance("100m".parse().unwrap())), "100m".to_string());
+        assert_eq!(
+            format!("{}", RepType::Distance("100m".parse().unwrap())),
+            "100m".to_string()
+        );
         assert_eq!(format!("{}", RepType::Cals(10)), "10 calories".to_string());
         assert_eq!(format!("{}", RepType::Max), "Max reps of".to_string());
     }

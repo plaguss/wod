@@ -208,7 +208,7 @@ impl fmt::Display for MovementParseError {
                 f,
                 "Invalid movement: `{}`, did you mean: `{}`?",
                 movement_name,
-                suggest_closest_movement(&movement_name).unwrap_or("None")
+                suggest_closest_movement(movement_name).unwrap_or("None")
             ),
         }
     }
@@ -302,7 +302,6 @@ impl FromStr for Movement {
             "dumbbell clean" => Ok(Movement::DumbbellClean),
             "dumbbell power clean" => Ok(Movement::DumbbellPowerClean),
             "dumbbell hang clean" => Ok(Movement::DumbbellHangClean),
-            "db hang clean" => Ok(Movement::DumbbellHangClean),
             "dumbbell clean and jerk" => Ok(Movement::DumbbellCleanAndJerk),
             "db clean and jerk" => Ok(Movement::DumbbellCleanAndJerk),
             "devil press" => Ok(Movement::DevilPress),
@@ -396,16 +395,16 @@ impl fmt::Display for Movement {
     }
 }
 
-fn suggest_closest_movement(movement: &str) -> Option<&str> {
+fn suggest_closest_movement(movement: &str) -> Option<&'static str> {
     // TODO: This will always return a str, change the output type
     // to just assume a string will be returned.
     let mut closest = None;
     let mut min_distance = usize::MAX;
-    for m in MOVEMENTS {
+    for &m in MOVEMENTS {
         let distance = levenshtein(movement, m);
         if distance < min_distance {
             min_distance = distance;
-            closest = Some(m.as_ref());
+            closest = Some(m);
         }
     }
     closest

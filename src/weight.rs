@@ -99,7 +99,7 @@ fn extract_unit(w: &str) -> (u32, u32, String) {
 impl FromStr for Weight {
     type Err = String;
     fn from_str(w: &str) -> Result<Self, Self::Err> {
-        let (weight_man, weight_woman, unit) = extract_unit(&w);
+        let (weight_man, weight_woman, unit) = extract_unit(w);
         Ok(Weight {
             weight_man,
             weight_woman,

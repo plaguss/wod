@@ -1,9 +1,6 @@
 #[cfg(test)]
-mod tests {
-    use crate::lexer::Lexer;
-    use crate::workout::{create_workout, Workout};
-    use crate::{ForTime, WorkoutType};
-
+mod testing {
+    use crate::workout::create_workout;
     //TODO: Start from here until a decent amount of wods can be represented as strings
     // The workouts are too simple yet.
     // - They need to accomodate weights

@@ -237,14 +237,12 @@ impl<'a> Lexer<'a> {
                         // Skip these tokens
                         process_buf(&mut buf, tokens);
                     }
-                    _ => {
-                        buf.push(c)
-                    }
+                    _ => buf.push(c),
                 }
             }
             // Push any pending number in the buffer
             process_buf(&mut buf, tokens);
-        } else if number.contains("kg") || number.contains("%") {
+        } else if number.contains("kg") || number.contains('%') {
             tokens.push(Token::Weight(
                 Weight::from_str(number.as_str()).expect("Wrong Weight format"),
             ));
@@ -252,13 +250,12 @@ impl<'a> Lexer<'a> {
             tokens.push(Token::RM(
                 RM::from_str(number.as_str()).expect("Invalid RM"),
             ));
-        } else if number.contains("K")
-            || number.contains("k")
-            || number.contains("m")
-            || number.contains("i")
-            || number.contains("l")
-            || number.contains("e")
-            || number.contains("a")
+        } else if number.to_lowercase().contains('K')
+            || number.contains('m')
+            || number.contains('i')
+            || number.contains('l')
+            || number.contains('e')
+            || number.contains('a')
         {
             tokens.push(Token::RepType(
                 RepType::from_str(&number).expect("Invalid rep type"),

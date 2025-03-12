@@ -64,7 +64,7 @@ fn extract_distance(d: &str) -> (u32, String) {
 impl FromStr for Distance {
     type Err = String;
     fn from_str(d: &str) -> Result<Self, Self::Err> {
-        let (num, unit) = extract_distance(&d);
+        let (num, unit) = extract_distance(d);
         Ok(Distance { num, unit })
     }
 }

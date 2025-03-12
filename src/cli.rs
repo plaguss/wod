@@ -1,43 +1,42 @@
 use clap::{Parser, Subcommand};
 
-use std::fs;
-use std::io;
-use std::path::PathBuf;
 use wod::default_filename;
 
 #[derive(Parser, Debug)]
 #[command(author, version, about, long_about = None)]
 pub struct Cli {
-    /// Optional name to operate on
-    #[arg(value_name = "FILENAME", default_value_t = default_filename())]
+    /// Optional name to work with.
+    #[arg(default_value_t = default_filename())]
     pub filename: String,
 
-    /// Optional name to operate on
-    #[arg(short, long, value_name = "FILE")]
+    /// A path pointing to a file with a list of workouts to add.
+    /// Each line in the file should be a workout as you would pass
+    /// to `wod add <workout>`.
+    #[arg(short, long)]
     pub wodfile: Option<String>,
 
     /// Subcommands
     #[command(subcommand)]
     pub command: Option<Commands>,
 
-    /// Force overwrite of existing file
+    /// Whether to force overwriting an existing file, defaults to false.
     #[arg(short, long, default_value = "false")]
     pub force: bool,
 }
 
 #[derive(Subcommand, Debug)]
 pub enum Commands {
-    /// Adds a new workout
+    /// Subcommand to add a new workout to a file.
     Add(AddCommand),
 }
 
 #[derive(Parser, Debug)]
 pub struct AddCommand {
-    /// Optional name to operate on
-    #[arg(short, long, value_name = "FILENAME", default_value_t = default_filename())]
+    /// The filename to add the workout to. By default will use the same used with the `wod` command.
+    #[arg(short, long, default_value_t = default_filename())]
     pub filename: String,
 
-    /// The movement to add for the moment, should be a single piece of a workout
-    #[arg(value_name = "air squat, 5x5")]
+    /// The workout to add, i.e. "4rd 21 box jump over, 15 bar mu".
+    #[arg(required = true)]
     pub workout: String,
 }

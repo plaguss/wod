@@ -46,7 +46,7 @@ impl FromStr for Rest {
         }
         Ok(Rest {
             duration: duration.parse().unwrap(),
-            unit: unit,
+            unit,
         })
     }
 }

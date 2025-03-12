@@ -1,7 +1,7 @@
 use std::fmt;
 use std::str::FromStr;
 
-use crate::workout_types::{amrap::AMRAP, emom::EMOM, for_time::ForTime, rest::Rest};
+use crate::workout_types::{amrap::AMRAP, emom::EMOM, for_time::ForTime};
 
 /// Represents different types of workouts.
 ///

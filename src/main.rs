@@ -5,7 +5,7 @@ use std::path::PathBuf;
 use clap::Parser;
 
 use cli::{Cli, Commands};
-use wod::{run_base, run_add_wod_from_file, run_add_workout};
+use wod::{run_add_wod_from_file, run_add_workout, run_base};
 
 fn main() {
     let cli = Cli::parse();

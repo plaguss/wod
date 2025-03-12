@@ -50,7 +50,7 @@ impl FromStr for AMRAP {
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         // Split the string into number part and name part
-        let parts: Vec<&str> = s.split("-").collect();
+        let parts: Vec<&str> = s.split('-').collect();
         if parts[0] != "amrap" {
             return Err("Invalid AMRAP format".to_string());
         }

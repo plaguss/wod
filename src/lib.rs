@@ -20,15 +20,13 @@ pub use self::workout_types::{
 pub use self::rep_types::{distance::Distance, rep_type::RepType};
 
 use std::fs;
+use std::fs::File;
 use std::fs::OpenOptions;
 use std::io::Write;
-use std::path::PathBuf;
-use std::fs::File;
 use std::io::{self, BufRead};
+use std::path::PathBuf;
 
 use chrono::Local;
-
-use crate::lexer::Lexer;
 
 fn today() -> String {
     Local::now().format("%d-%m-%Y").to_string()
@@ -95,7 +93,11 @@ pub fn run_base(mut filename: PathBuf, force: &bool) -> Result<(), Box<dyn std::
         fs::create_dir_all(dir_path)?;
     }
     // Create the file
-    let mut file = OpenOptions::new().write(true).create(true).open(filename)?;
+    let mut file = OpenOptions::new()
+        .write(true)
+        .create(true)
+        .truncate(true)
+        .open(filename)?;
 
     // Write the markdown header of the file
     file.write_all(
@@ -106,7 +108,7 @@ date: {}
 draft: false
 ---
 
-Workout for today, {}.
+Workout for the day, {}.
 "#,
             today(),
             today(),
@@ -153,7 +155,7 @@ pub fn run_add_workout(filename: PathBuf, workout: &str) -> Result<(), Box<dyn s
     let mut file = OpenOptions::new()
         .append(true)
         .create(true)
-        .open(&filename)?;
+        .open(filename)?;
 
     file.write_all(content.as_bytes())?;
 
@@ -197,7 +199,10 @@ pub fn run_add_workout(filename: PathBuf, workout: &str) -> Result<(), Box<dyn s
 /// let filename = PathBuf::from("workouts.md");
 /// let wodfile = PathBuf::from(".example_wod.wod");
 /// run_add_wod_from_file(filename.clone(), wodfile.clone()).expect("Failed create WOD from file");
-pub fn run_add_wod_from_file(filename: PathBuf, wodfile: PathBuf) -> Result<(), Box<dyn std::error::Error>> {
+pub fn run_add_wod_from_file(
+    filename: PathBuf,
+    wodfile: PathBuf,
+) -> Result<(), Box<dyn std::error::Error>> {
     let _ = run_base(filename.clone(), &true);
 
     if let Ok(lines) = read_wodfile(wodfile) {
@@ -208,7 +213,6 @@ pub fn run_add_wod_from_file(filename: PathBuf, wodfile: PathBuf) -> Result<(), 
     }
     Ok(())
 }
-
 
 fn read_wodfile(filename: PathBuf) -> io::Result<io::Lines<io::BufReader<File>>> {
     let file = File::open(filename)?;
