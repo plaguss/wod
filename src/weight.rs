@@ -21,7 +21,7 @@ use std::str::FromStr;
 /// });
 /// ```
 ///
-/// Or inderectly by parsing the string.
+/// Or indirectly by parsing the string.
 ///
 /// ```
 /// use wod::weight::Weight;

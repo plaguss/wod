@@ -114,3 +114,9 @@ And run the linting
 ```shell
 make lint
 ```
+
+Read the docs with
+
+```shell
+cargo doc --open
+```
