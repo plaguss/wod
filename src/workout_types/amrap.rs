@@ -1,9 +1,42 @@
 use std::fmt;
 use std::str::FromStr;
 
+/// Represents an As Many Reps As Possible (AMRAP) workout.
+///
+/// This struct is used to define a workout session where the goal is to perform as many repetitions
+/// as possible within a specified number of minutes.
+///
+/// # Examples
+///
+/// ## Parsing
+///
+/// The format should be `amrap-<minutes>`, where `<minutes>` is the number of minutes for the AMRAP.
+/// If the minutes part is missing or invalid, it defaults to 1 minute.
+///
+/// ```
+/// use wod::AMRAP;
+///
+/// let amrap: AMRAP = "amrap-10".parse().unwrap();
+/// assert_eq!(amrap, AMRAP { minutes: 10 });
+///
+/// let amrap_default: AMRAP = "amrap-".parse().unwrap();
+/// assert_eq!(amrap_default, AMRAP { minutes: 1 });
+/// ```
+///
+/// ## Display
+///
+/// Formats the `AMRAP` for display.
+///
+/// The output format is `AMRAP <minutes> minutes`.
+///
+/// ```
+/// use wod::AMRAP;
+/// let amrap = AMRAP { minutes: 10 };
+/// assert_eq!(format!("{}", amrap), "AMRAP 10 minutes".to_string());
+/// ```
 #[derive(Debug, PartialEq, Clone)]
 pub struct AMRAP {
-    // The number of minutes of work
+    /// The number of minutes allocated for the workout.
     pub minutes: u8,
     // TODO: For more complex AMRAPs
     // // The number of sets to perform
@@ -12,8 +45,6 @@ pub struct AMRAP {
     // rest: u32,
 }
 
-// An AMRAP comes defined as "amrap-10", always comes the identifier, then
-// a hyphen and the number of minutes
 impl FromStr for AMRAP {
     type Err = String;
 

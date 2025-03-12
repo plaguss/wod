@@ -12,38 +12,37 @@ use crate::workout_types::rest::Rest;
 /// # Examples
 ///
 /// ```
-/// use std::str::FromStr;
-/// use wod::workout_types::emom::EMOM;
+/// use wod::EMOM;
 ///
-/// let emom1 = EMOM::from_str("emom-10").unwrap();
+/// let emom1: EMOM = "emom-10".parse().unwrap();
 /// assert_eq!(emom1.rounds, 10);
 /// assert_eq!(emom1.every, 1);
 /// assert_eq!(emom1.alternating, false);
 /// assert_eq!(emom1.rest.duration, 0);
 /// assert_eq!(emom1.rest.unit, "");
 ///
-/// let emom2 = EMOM::from_str("emom-10-2").unwrap();
+/// let emom2: EMOM = "emom-10-2".parse().unwrap();
 /// assert_eq!(emom2.rounds, 10);
 /// assert_eq!(emom2.every, 2);
 /// assert_eq!(emom2.alternating, false);
 /// assert_eq!(emom2.rest.duration, 0);
 /// assert_eq!(emom2.rest.unit, "");
 ///
-/// let emom3 = EMOM::from_str("emom-10-30s").unwrap();
+/// let emom3: EMOM = "emom-10-30s".parse().unwrap();
 /// assert_eq!(emom3.rounds, 10);
 /// assert_eq!(emom3.every, 1);
 /// assert_eq!(emom3.alternating, false);
 /// assert_eq!(emom3.rest.duration, 30);
 /// assert_eq!(emom3.rest.unit, "s");
 ///
-/// let emom4 = EMOM::from_str("emom-10-2-alt").unwrap();
+/// let emom4: EMOM = "emom-10-2-alt".parse().unwrap();
 /// assert_eq!(emom4.rounds, 10);
 /// assert_eq!(emom4.every, 2);
 /// assert_eq!(emom4.alternating, true);
 /// assert_eq!(emom4.rest.duration, 0);
 /// assert_eq!(emom4.rest.unit, "");
 ///
-/// let emom5 = EMOM::from_str("emom-10-30s-alt").unwrap();
+/// let emom5: EMOM = "emom-10-30s-alt".parse().unwrap();
 /// assert_eq!(emom5.rounds, 10);
 /// assert_eq!(emom5.every, 1);
 /// assert_eq!(emom5.alternating, true);

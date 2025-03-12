@@ -3,8 +3,26 @@ use std::str::FromStr;
 
 use crate::rep_types::distance::Distance;
 
-// TODO: All of these must take into account men/woman, so 30/20 cals, 20/15 (for reps),
-// 400/300m, etc. Use Weight as reference
+/// TODO: All of these must take into account men/woman, so 30/20 cals, 20/15 (for reps),
+/// Represents different types of repetitions or measures in a workout.
+/// 
+/// This enum can be used to specify the type of repetition, distance, calories, or
+/// maximum reps in a workout routine.
+///
+/// # Examples
+///
+/// ```
+/// use wod::{RepType, Distance};
+///
+/// let reps = "10".parse::<RepType>().unwrap();
+/// assert_eq!(reps, RepType::Reps(10));
+/// let distance = RepType::Distance("100m".parse::<Distance>().unwrap());
+/// assert_eq!(distance, RepType::Distance("100m".parse::<Distance>().unwrap()));
+/// let cals = "10cals".parse::<RepType>().unwrap();
+/// assert_eq!(cals, RepType::Cals(10));
+/// let max = "max".parse::<RepType>().unwrap();
+/// assert_eq!(max, RepType::Max);
+/// ```
 #[derive(Debug, PartialEq, Clone)]
 pub enum RepType {
     /// Default number of repetitions, e.g. 10 or whatever single number
@@ -23,7 +41,8 @@ impl FromStr for RepType {
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         // Check if it's a distance, e.g. 100m, 5K
         if s.ends_with("m") || s.to_lowercase().ends_with("k") {
-            return Ok(RepType::Distance(Distance::from(s.to_string())));
+            return Ok(RepType::Distance(s.parse::<Distance>().expect("Invalid distance")));
+            // return Ok(RepType::Distance(Distance::from(s.to_string())));
         }
 
         // Check if it's a number followed by "cals"
@@ -71,13 +90,21 @@ mod tests {
         assert_eq!(RepType::from_str("10").unwrap(), RepType::Reps(10));
         assert_eq!(
             RepType::from_str("100m").unwrap(),
-            RepType::Distance(Distance::from("100m".to_string()))
+            RepType::Distance("100m".parse::<Distance>().unwrap())
         );
         assert_eq!(
             RepType::from_str("5k").unwrap(),
-            RepType::Distance(Distance::from("5k".to_string()))
+            RepType::Distance("5k".parse::<Distance>().unwrap())
         );
         assert_eq!(RepType::from_str("10cals").unwrap(), RepType::Cals(10));
         assert_eq!(RepType::from_str("max").unwrap(), RepType::Max);
+    }
+
+    #[test]
+    fn test_rep_type_display() {
+        assert_eq!(format!("{}", RepType::Reps(10)), "10".to_string());
+        assert_eq!(format!("{}", RepType::Distance("100m".parse().unwrap())), "100m".to_string());
+        assert_eq!(format!("{}", RepType::Cals(10)), "10 calories".to_string());
+        assert_eq!(format!("{}", RepType::Max), "Max reps of".to_string());
     }
 }

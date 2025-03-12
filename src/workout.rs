@@ -125,17 +125,17 @@ impl Workout {
                 .split(separator)
                 .enumerate()
                 .map(|(index, part)| {
-                        if index == 0 {
-                            format!("**{}**", part)
-                        } else {
-                            part.to_string()
-                        }
-                    })
+                    if index == 0 {
+                        format!("**{}**", part)
+                    } else {
+                        part.to_string()
+                    }
+                })
                 .collect::<Vec<String>>()
                 .join(separator);
-            return format!("\n\n---\n\n{}\n\n", formatted_header)
+            return format!("\n\n---\n\n{}\n\n", formatted_header);
         } else {
-            return format!("\n\n---\n\n**{}**\n\n", self.workout_type)
+            return format!("\n\n---\n\n**{}**\n\n", self.workout_type);
         }
     }
 

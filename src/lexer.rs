@@ -66,13 +66,10 @@ pub enum Token {
 ///     ]
 /// );
 /// ```
-///
-/// # Fields
-///
-/// * `input` - An iterator over the characters of the input string.
-/// * `current_char` - The current character being analyzed by the lexer.
 pub struct Lexer<'a> {
+    /// An iterator over the characters of the input string.
     input: Chars<'a>,
+    /// The current character being analyzed by the lexer.
     current_char: Option<char>,
 }
 

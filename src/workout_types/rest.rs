@@ -54,7 +54,13 @@ impl FromStr for Rest {
 impl fmt::Display for Rest {
     fn fmt(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
         let unit = match self.unit.as_str() {
-            "m" => if self.duration != 1 {"minutes"} else {"minute"},
+            "m" => {
+                if self.duration != 1 {
+                    "minutes"
+                } else {
+                    "minute"
+                }
+            }
             "s" => "seconds",
             _ => "unknown",
         };

@@ -1,16 +1,35 @@
 use std::fmt;
 use std::str::FromStr;
 
-use crate::workout_types::amrap::AMRAP;
-use crate::workout_types::emom::EMOM;
-use crate::workout_types::for_time::ForTime;
-use crate::workout_types::rest::Rest;
+use crate::workout_types::{amrap::AMRAP, emom::EMOM, for_time::ForTime, rest::Rest};
 
+/// Represents different types of workouts.
+///
+/// This enum categorizes workouts into four main types:
+/// - `ForTime`: A workout that is completed as fast as possible.
+/// - `AMRAP`: As Many Rounds As Possible within a set time.
+/// - `EMOM`: Every Minute On the Minute, typically involving a specific exercise or set of exercises.
+/// - `Weightlifting`: Focused on weightlifting exercises.
+///
+/// # Examples
+///
+/// ```
+/// use wod::{WorkoutType, ForTime, AMRAP, EMOM};
+///
+/// let for_time_workout = WorkoutType::ForTime(ForTime { rounds: 1, name: "ft".to_string() });
+/// let amrap_workout = WorkoutType::AMRAP(AMRAP { minutes: 10 });
+/// let emom_workout = WorkoutType::EMOM("emom-10".parse::<EMOM>().unwrap());
+/// let weightlifting_workout = WorkoutType::Weightlifting;
+/// ```
 #[derive(Debug, PartialEq, Clone)]
 pub enum WorkoutType {
+    /// Represents a `ForTime` workout.
     ForTime(ForTime),
+    /// Represents an `AMRAP` (As Many Rounds As Possible) workout.
     AMRAP(AMRAP),
+    /// Represents an `EMOM` (Every Minute On the Minute) workout.
     EMOM(EMOM),
+    /// Represents a Weightlifting workout.
     Weightlifting,
 }
 

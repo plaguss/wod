@@ -1,6 +1,71 @@
 use std::fmt;
 use std::str::FromStr;
 
+/// Represents a time-based exercise or workout configuration.
+///
+/// The "ForTime" struct is used to denote exercises or workouts that are performed
+/// for a certain number of rounds within a time limit, or for time, where the goal
+/// is to complete as many rounds as possible within a given time frame.
+///
+/// # Examples
+///
+/// ```
+/// use wod::ForTime;
+///
+/// let ft = ForTime {
+///     rounds: 1,
+///     name: "ft".to_string(),
+/// };
+///
+/// let rd = ForTime {
+///     rounds: 5,
+///     name: "rd".to_string(),
+/// };
+///
+/// assert_eq!(ft.rounds, 1);
+/// assert_eq!(ft.name, "ft");
+/// assert_eq!(rd.rounds, 5);
+/// assert_eq!(rd.name, "rd");
+/// ```
+///
+/// ## Parsing
+///
+/// The "ForTime" struct implements the "FromStr" trait, the string should be formatted
+/// as "<rounds><name>", where "<rounds>"
+/// is an optional number of rounds, and "<name>" is the identifier for the exercise
+/// or workout.
+///
+/// ```
+/// use std::str::FromStr;
+/// use wod::ForTime;
+///
+/// let ft: ForTime = "ft".parse().unwrap();
+/// assert_eq!(ft, ForTime { rounds: 1, name: "ft".to_string() });
+///
+/// let rd: ForTime = "5rd".parse().unwrap();
+/// assert_eq!(rd, ForTime { rounds: 5, name: "rd".to_string() });
+/// ```
+///
+/// ## Display
+///
+/// The "ForTime" struct also implements the `Display` trait.
+///
+/// ```
+/// use wod::ForTime;
+///
+/// let ft = ForTime {
+///     rounds: 1,
+///     name: "ft".to_string(),
+/// };
+///
+/// let rd = ForTime {
+///     rounds: 5,
+///     name: "rd".to_string(),
+/// };
+///
+/// assert_eq!(ft.to_string(), "For Time");
+/// assert_eq!(rd.to_string(), "5 rounds for time");
+/// ```
 #[derive(Debug, PartialEq, Clone)]
 pub struct ForTime {
     pub rounds: u32,

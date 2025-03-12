@@ -11,15 +11,13 @@ pub mod workout_types;
 pub use self::movement::Movement;
 pub use self::rm::RM;
 pub use self::weight::Weight;
-pub use self::workout::{Workout, create_workout};
+pub use self::workout::{create_workout, Workout};
 
 pub use self::workout_types::{
     amrap::AMRAP, emom::EMOM, for_time::ForTime, rest::Rest, workout_type::WorkoutType,
 };
 
-pub use self::rep_types::{
-    rep_type::RepType, distance::Distance
-};
+pub use self::rep_types::{distance::Distance, rep_type::RepType};
 
 use std::fs;
 use std::fs::OpenOptions;

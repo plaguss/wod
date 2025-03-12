@@ -12,7 +12,8 @@ mod tests {
     #[test]
     fn test_for_time_0() {
         let workout = create_workout("ft 21-15-9 pull up, thruster @43/30kg");
-        let expected = "\n\n---\n\n**For Time**\n\n21-15-9\n\n- Pull Up\n\n- Thruster At 43/30kg\n\n";
+        let expected =
+            "\n\n---\n\n**For Time**\n\n21-15-9\n\n- Pull Up\n\n- Thruster At 43/30kg\n\n";
         assert_eq!(workout.write(), expected);
     }
 
@@ -56,9 +57,8 @@ mod tests {
 
     #[test]
     fn test_emom_1() {
-        let workout = create_workout(
-            "emom-12 15cal row, 12 toes to bar, max db clean and jerk @ 22/15kg",
-        );
+        let workout =
+            create_workout("emom-12 15cal row, 12 toes to bar, max db clean and jerk @ 22/15kg");
         let expected = "\n\n---\n\n**EMOM 12 minutes**\n\n- 15 calories Row\n\n- 12 Toes To Bar\n\n- Max reps of Dumbbell Clean and Jerk At 22/15kg\n\n";
         assert_eq!(workout.write(), expected);
     }

@@ -1,7 +1,6 @@
 use std::fmt;
 use std::str::FromStr;
 
-
 /// Represents a "Repetition Maximum" for a weightlifting movement.
 ///
 /// # Examples
