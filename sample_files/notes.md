@@ -1,1 +1,0 @@
-- Initially will have to write the metadata expected by Hugo enclosed with --- .... ---
