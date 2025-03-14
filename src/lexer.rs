@@ -108,7 +108,7 @@ impl<'a> Lexer<'a> {
                 break;
             }
         }
-        let workout_type = WorkoutType::from_str(result.as_str()).expect("Invalid workout type");
+        let workout_type: WorkoutType = result.parse().expect("Invalid workout type");
         workout_type
     }
 
@@ -279,7 +279,7 @@ impl<'a> Lexer<'a> {
             tokens.push(Token::RepType(RepType::Max));
         }
         if !movement.is_empty() {
-            let mov = Movement::from_str(&movement).expect("Invalid movement");
+            let mov: Movement = movement.parse().expect("Invalid movement");
             tokens.push(Token::Movement(mov));
         }
     }
