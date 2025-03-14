@@ -17,7 +17,7 @@ pub use self::workout_types::{
     amrap::AMRAP, emom::EMOM, for_time::ForTime, rest::Rest, workout_type::WorkoutType,
 };
 
-pub use self::rep_types::{cals::Cals, distance::Distance, rep_type::RepType};
+pub use self::rep_types::{cals::Cals, distance::Distance, rep_type::RepType, reps::Reps};
 
 use std::fs;
 use std::fs::File;
@@ -109,6 +109,7 @@ draft: false
 ---
 
 Workout for the day, {}.
+
 "#,
             today(),
             today(),

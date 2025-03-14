@@ -50,7 +50,7 @@ impl FromStr for WorkoutType {
             // ft, 5rd, 2rd, etc.
             return ForTime::from_str(s).map(WorkoutType::ForTime);
         }
-        Err("Invalid workout type".to_string())
+        Err(format!("Invalid workout type: {}", s))
     }
 }
 

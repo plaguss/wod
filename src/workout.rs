@@ -134,9 +134,9 @@ impl Workout {
                 })
                 .collect::<Vec<String>>()
                 .join(separator);
-            format!("\n\n---\n\n{}\n\n", formatted_header)
+            format!("---\n\n{}\n\n", formatted_header)
         } else {
-            format!("\n\n---\n\n**{}**\n\n", self.workout_type)
+            format!("---\n\n**{}**\n\n", self.workout_type)
         }
     }
 
@@ -368,7 +368,7 @@ mod tests {
         let mut workout = Workout::default();
         workout.parse(tokens);
 
-        let expected = "\n\n---\n\n**For Time**\n\n21-15-9\n\n- Pull Up\n\n- Thruster\n\n";
+        let expected = "---\n\n**For Time**\n\n21-15-9\n\n- Pull Up\n\n- Thruster\n\n";
         assert_eq!(workout.write(), expected);
     }
 

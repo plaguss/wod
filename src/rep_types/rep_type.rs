@@ -1,7 +1,7 @@
 use std::fmt;
 use std::str::FromStr;
 
-use crate::rep_types::{cals::Cals, distance::Distance};
+use crate::rep_types::{cals::Cals, distance::Distance, reps::Reps};
 
 /// TODO: All of these must take into account men/woman, so 30/20 cals, 20/15 (for reps),
 /// Represents different types of repetitions or measures in a workout.
@@ -26,7 +26,7 @@ use crate::rep_types::{cals::Cals, distance::Distance};
 #[derive(Debug, PartialEq, Clone)]
 pub enum RepType {
     /// Default number of repetitions, e.g. 10 or whatever single number
-    Reps(u16),
+    Reps(Reps),
     /// Distance, e.g. 100m, 5K
     Distance(Distance),
     /// Calories, e.g. 10cal, 100/80cal
@@ -55,12 +55,12 @@ impl FromStr for RepType {
             return Ok(RepType::Max);
         }
 
-        // Check if it's a number
-        if let Ok(reps) = s.parse::<u16>() {
-            return Ok(RepType::Reps(reps));
-        }
+        // Check if it's a number, we haven't
+        return Ok(RepType::Reps(
+            s.parse::<Reps>().expect("Invalid repetitions"),
+        ));
 
-        Err("Invalid rep type".to_string())
+        // Err("Invalid rep type".to_string())
     }
 }
 
@@ -81,7 +81,10 @@ mod tests {
 
     #[test]
     fn test_rep_type_from_str() {
-        assert_eq!(RepType::from_str("10").unwrap(), RepType::Reps(10));
+        assert_eq!(
+            RepType::from_str("10").unwrap(),
+            RepType::Reps("10".parse::<Reps>().unwrap())
+        );
         assert_eq!(
             RepType::from_str("100m").unwrap(),
             RepType::Distance("100m".parse::<Distance>().unwrap())
@@ -90,7 +93,6 @@ mod tests {
             RepType::from_str("5k").unwrap(),
             RepType::Distance("5k".parse::<Distance>().unwrap())
         );
-        // assert_eq!(RepType::from_str("10cals").unwrap(), RepType::Cals(10));
         assert_eq!(
             RepType::from_str("10cal").unwrap(),
             RepType::Cals("10cal".parse::<Cals>().unwrap())
@@ -100,7 +102,10 @@ mod tests {
 
     #[test]
     fn test_rep_type_display() {
-        assert_eq!(format!("{}", RepType::Reps(10)), "10".to_string());
+        assert_eq!(
+            format!("{}", RepType::Reps("10".parse::<Reps>().unwrap())),
+            "10".to_string()
+        );
         assert_eq!(
             format!("{}", RepType::Distance("100m".parse().unwrap())),
             "100m".to_string()
