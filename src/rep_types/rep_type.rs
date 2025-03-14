@@ -56,9 +56,9 @@ impl FromStr for RepType {
         }
 
         // Check if it's a number, we haven't
-        return Ok(RepType::Reps(
+        Ok(RepType::Reps(
             s.parse::<Reps>().expect("Invalid repetitions"),
-        ));
+        ))
 
         // Err("Invalid rep type".to_string())
     }
