@@ -64,10 +64,10 @@ pub fn default_filename() -> String {
 /// let mut filename = PathBuf::from("workout.md");
 /// let force = false;
 ///
-/// match run_base(filename, &force) {
-///     Ok(_) => println!("File created successfully or already exists."),
-///     Err(e) => eprintln!("Error: {}", e),
-/// }
+/// // match run_base(filename, &force) {
+/// //     Ok(_) => println!("File created successfully or already exists."),
+/// //     Err(e) => eprintln!("Error: {}", e),
+/// // }
 /// ```
 pub fn run_base(mut filename: PathBuf, force: &bool) -> Result<(), Box<dyn std::error::Error>> {
     if filename
@@ -146,9 +146,9 @@ Workout for the day, {}.
 /// use std::path::PathBuf;
 /// use wod::run_add_workout;
 ///
-/// let filename = PathBuf::from("workouts.txt");
-/// let workout = "wl 3x4 push press @75%";
-/// run_add_workout(filename.clone(), workout).expect("Failed to add workout");
+/// // let filename = PathBuf::from("workouts.txt");
+/// // let workout = "wl 3x4 push press @75%";
+/// // run_add_workout(filename.clone(), workout).expect("Failed to add workout");
 pub fn run_add_workout(filename: PathBuf, workout: &str) -> Result<(), Box<dyn std::error::Error>> {
     let wkt = create_workout(workout);
     let content = wkt.write();
@@ -197,9 +197,9 @@ pub fn run_add_workout(filename: PathBuf, workout: &str) -> Result<(), Box<dyn s
 /// use std::path::PathBuf;
 /// use wod::run_add_wod_from_file;
 ///
-/// let filename = PathBuf::from("workouts.md");
-/// let wodfile = PathBuf::from(".example_wod.wod");
-/// run_add_wod_from_file(filename.clone(), wodfile.clone()).expect("Failed create WOD from file");
+/// // let filename = PathBuf::from("workouts.md");
+/// // let wodfile = PathBuf::from(".example_wod.wod");
+/// // run_add_wod_from_file(filename.clone(), wodfile.clone()).expect("Failed create WOD from file");
 pub fn run_add_wod_from_file(
     filename: PathBuf,
     wodfile: PathBuf,

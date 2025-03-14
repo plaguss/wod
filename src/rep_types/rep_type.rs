@@ -12,14 +12,14 @@ use crate::rep_types::{cals::Cals, distance::Distance, reps::Reps};
 /// # Examples
 ///
 /// ```
-/// use wod::{RepType, Distance};
+/// use wod::{RepType, Distance, Reps, Cals};
 ///
 /// let reps = "10".parse::<RepType>().unwrap();
-/// assert_eq!(reps, RepType::Reps(10));
+/// assert_eq!(reps, RepType::Reps(Reps{reps_man: 10, reps_woman: 10}));
 /// let distance = RepType::Distance("100m".parse::<Distance>().unwrap());
 /// assert_eq!(distance, RepType::Distance("100m".parse::<Distance>().unwrap()));
 /// let cals = "10cals".parse::<RepType>().unwrap();
-/// assert_eq!(cals, RepType::Cals(10));
+/// assert_eq!(cals, RepType::Cals(Cals{cals_man: 10, cals_woman: 10}));
 /// let max = "max".parse::<RepType>().unwrap();
 /// assert_eq!(max, RepType::Max);
 /// ```
