@@ -26,7 +26,7 @@ use std::io::Write;
 use std::io::{self, BufRead};
 use std::path::PathBuf;
 
-use chrono::Local;
+use chrono::{Local, NaiveDate};
 
 fn today() -> String {
     Local::now().format("%d-%m-%Y").to_string()
@@ -97,8 +97,15 @@ pub fn run_base(mut filename: PathBuf, force: &bool) -> Result<(), Box<dyn std::
         .write(true)
         .create(true)
         .truncate(true)
-        .open(filename)?;
+        .open(&filename)?;
 
+    let title = filename
+        .file_name()
+        .unwrap()
+        .to_string_lossy()
+        .replace("wod-", "")
+        .replace(".md", "");
+    let file_date = get_date_from_title(title.as_str());
     // Write the markdown header of the file
     file.write_all(
         format!(
@@ -111,14 +118,23 @@ draft: false
 Workout for the day, {}.
 
 "#,
-            today(),
-            today(),
-            today()
+            title, file_date, title
         )
         .as_bytes(),
     )?;
 
     Ok(())
+}
+
+/// Function to obtain a date from the title.
+/// The title is a date of the form dd-mm-yy, but hugo wants
+/// the format yyyy-mm-dd
+fn get_date_from_title(title: &str) -> String {
+    let date = NaiveDate::parse_from_str(title, "%d-%m-%y")
+        .expect("Failed to parse date")
+        .format("%Y-%m-%d")
+        .to_string();
+    date
 }
 
 /// Appends a new workout to a file.
