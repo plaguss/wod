@@ -91,11 +91,9 @@ impl FromStr for EMOM {
                     alternating = true;
                 }
                 _ => {
-                    if part.starts_with('r') {
-                        if part.contains('m') | part.contains('s') {
-                            rest = Every::from_str(part).expect("Invalid Rest format");
-                            continue;
-                        }
+                    if part.starts_with('r') && (part.contains('m') | part.contains('s')) {
+                        rest = Every::from_str(part).expect("Invalid Rest format");
+                        continue;
                     }
 
                     if counter == 0 {

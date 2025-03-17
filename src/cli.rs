@@ -26,8 +26,10 @@ pub struct Cli {
 
 #[derive(Subcommand, Debug)]
 pub enum Commands {
-    /// Subcommand to add a new workout to a file.
+    /// Command to add a new workout to a file.
     Add(AddCommand),
+    /// Command to list the movements along with an explanatory video.
+    List(ListCommand),
 }
 
 #[derive(Parser, Debug)]
@@ -39,4 +41,11 @@ pub struct AddCommand {
     /// The workout to add, i.e. "4rd 21 box jump over, 15 bar mu".
     #[arg(required = true)]
     pub workout: String,
+}
+
+#[derive(Parser, Debug)]
+pub struct ListCommand {
+    /// Whether to list the workouts or generate a markdown page for them.
+    #[arg(short, long, default_value = "true")]
+    pub page: bool,
 }

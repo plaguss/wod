@@ -1,11 +1,11 @@
 use std::fmt;
 // For reference: https://www.crossfit.com/crossfit-movements
+use std::collections::BTreeMap;
 use std::str::FromStr;
+
 use strsim::levenshtein;
 
-// TODO: Move this to an Enum, try to implement a FromStr trait
-// Display and different checks for the movement creation.
-// A list of the movements that can be performed.
+/// Available movements
 static MOVEMENTS: &[&str] = &[
     // Squat movements
     "air squat",
@@ -61,6 +61,7 @@ static MOVEMENTS: &[&str] = &[
     "shspu",
     "hspu",
     "handstand push up",
+    "wall walk",
     "handstand walk",
     "hsw",
     "hs walk",
@@ -88,7 +89,8 @@ static MOVEMENTS: &[&str] = &[
     "sled push",
     "sled pull",
     "sled drag",
-    "sled sprint",
+    "rope climb",
+    "rc",
     // Cardio/machines
     "row",
     "run",
@@ -110,6 +112,7 @@ static MOVEMENTS: &[&str] = &[
     "db hang clean",
     "dumbbell clean and jerk",
     "db clean and jerk",
+    "db hang clean and jerk",
     "devil press",
 ];
 
@@ -171,6 +174,7 @@ pub enum Movement {
     StrictPullUp,
     StrictHandstandPushUp,
     HandstandPushUp,
+    WallWalk,
     HandstandWalk,
     HandstandHold,
     Thruster,
@@ -192,7 +196,7 @@ pub enum Movement {
     SledPush,
     SledPull,
     SledDrag,
-    SledSprint,
+    RopeClimb,
     Row,
     Run,
     Bike,
@@ -203,22 +207,23 @@ pub enum Movement {
     DumbbellPowerClean,
     DumbbellHangClean,
     DumbbellCleanAndJerk,
+    DumbbellHangCleanAndJerk,
     DevilPress,
 }
 
 #[derive(Debug)]
 pub enum MovementParseError {
-    InvalidMovement(String),
+    InvalidMovement(String, String),
 }
 
 impl fmt::Display for MovementParseError {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match self {
-            MovementParseError::InvalidMovement(movement_name) => write!(
+            MovementParseError::InvalidMovement(movement_name, suggestion) => write!(
                 f,
                 "Invalid movement: `{}`, did you mean: `{}`?",
                 movement_name,
-                suggest_closest_movement(movement_name).unwrap_or("None")
+                suggestion // suggest_closest_movement(movement_name).unwrap_or("None")
             ),
         }
     }
@@ -226,6 +231,14 @@ impl fmt::Display for MovementParseError {
 
 // Implement the std::error::Error trait for the custom error type
 impl std::error::Error for MovementParseError {}
+
+impl MovementParseError {
+    // Factory method that automatically suggests the closest movement.
+    pub fn new_invalid(movement_name: String) -> Self {
+        let suggestion = suggest_closest_movement(&movement_name);
+        MovementParseError::InvalidMovement(movement_name, suggestion.unwrap().to_string())
+    }
+}
 
 impl FromStr for Movement {
     type Err = MovementParseError;
@@ -284,6 +297,7 @@ impl FromStr for Movement {
             "handstand walk" => Ok(Movement::HandstandWalk),
             "hs walk" => Ok(Movement::HandstandWalk),
             "hsw" => Ok(Movement::HandstandWalk),
+            "wall walk" => Ok(Movement::WallWalk),
             "handstand hold" => Ok(Movement::HandstandHold),
             "thruster" => Ok(Movement::Thruster),
             "front rack lunge" => Ok(Movement::FrontRackLunge),
@@ -305,7 +319,8 @@ impl FromStr for Movement {
             "sled push" => Ok(Movement::SledPush),
             "sled pull" => Ok(Movement::SledPull),
             "sled drag" => Ok(Movement::SledDrag),
-            "sled sprint" => Ok(Movement::SledSprint),
+            "rope climb" => Ok(Movement::RopeClimb),
+            "rc" => Ok(Movement::RopeClimb),
             "row" => Ok(Movement::Row),
             "run" => Ok(Movement::Run),
             "bike" => Ok(Movement::Bike),
@@ -322,7 +337,7 @@ impl FromStr for Movement {
             "dumbbell clean and jerk" => Ok(Movement::DumbbellCleanAndJerk),
             "db clean and jerk" => Ok(Movement::DumbbellCleanAndJerk),
             "devil press" => Ok(Movement::DevilPress),
-            _ => Err(MovementParseError::InvalidMovement(s.to_string())),
+            _ => Err(MovementParseError::new_invalid(s.to_string())),
         }
     }
 }
@@ -377,6 +392,7 @@ impl fmt::Display for Movement {
                 Movement::StrictHandstandPushUp => "Strict Handstand Push Up",
                 Movement::HandstandPushUp => "Handstand Push Up",
                 Movement::HandstandWalk => "Handstand Walk",
+                Movement::WallWalk => "Wall Walk",
                 Movement::HandstandHold => "Handstand Hold",
                 Movement::Thruster => "Thruster",
                 Movement::FrontRackLunge => "Front Rack Lunge",
@@ -397,7 +413,7 @@ impl fmt::Display for Movement {
                 Movement::SledPush => "Sled Push",
                 Movement::SledPull => "Sled Pull",
                 Movement::SledDrag => "Sled Drag",
-                Movement::SledSprint => "Sled Sprint",
+                Movement::RopeClimb => "Rope Climb",
                 Movement::Row => "Row",
                 Movement::Run => "Run",
                 Movement::Bike => "Bike",
@@ -408,9 +424,165 @@ impl fmt::Display for Movement {
                 Movement::DumbbellPowerClean => "Dumbbell Power Clean",
                 Movement::DumbbellHangClean => "Dumbbell Hang Clean",
                 Movement::DumbbellCleanAndJerk => "Dumbbell Clean and Jerk",
+                Movement::DumbbellHangCleanAndJerk => "Dumbbell Hang Clean and Jerk",
                 Movement::DevilPress => "Devil Press",
             }
         )
+    }
+}
+
+impl Movement {
+    pub fn list_with_url() -> BTreeMap<String, String> {
+        BTreeMap::from([
+            (
+                "Air Squat".to_string(),
+                "https://www.crossfit.com/essentials/the-air-squat".to_string(),
+            ),
+            (
+                "Front Squat".to_string(),
+                "https://www.crossfit.com/essentials/the-front-squat".to_string(),
+            ),
+            (
+                "Back Squat".to_string(),
+                "https://www.crossfit.com/essentials/the-back-squat".to_string(),
+            ),
+            (
+                "Overhead Squat".to_string(),
+                "https://www.crossfit.com/essentials/the-overhead-squat".to_string(),
+            ),
+            (
+                "Pistol Squat".to_string(),
+                "https://www.crossfit.com/essentials/the-single-leg-squat".to_string(),
+            ),
+            ("Goblet Squat".to_string(), "".to_string()),
+            (
+                "Deadlift".to_string(),
+                "https://www.crossfit.com/essentials/the-deadlift".to_string(),
+            ),
+            (
+                "Sumo Deadlift".to_string(),
+                "https://www.crossfit.com/essentials/the-sumo-deadlift".to_string(),
+            ),
+            ("Romanian Deadlift".to_string(), "".to_string()),
+            (
+                "Shoulder Press".to_string(),
+                "https://www.crossfit.com/essentials/the-shoulder-press".to_string(),
+            ),
+            (
+                "Push Press".to_string(),
+                "https://www.crossfit.com/essentials/the-push-press".to_string(),
+            ),
+            (
+                "Push Jerk".to_string(),
+                "https://www.crossfit.com/essentials/the-push-jerk".to_string(),
+            ),
+            (
+                "Split Jerk".to_string(),
+                "https://www.crossfit.com/essentials/the-split-jerk".to_string(),
+            ),
+            (
+                "Bench Press".to_string(),
+                "https://www.crossfit.com/essentials/the-bench-press".to_string(),
+            ),
+            (
+                "Clean".to_string(),
+                "https://www.crossfit.com/essentials/the-clean-2".to_string(),
+            ),
+            (
+                "Power Clean".to_string(),
+                "https://www.crossfit.com/essentials/the-power-clean".to_string(),
+            ),
+            (
+                "Hang Clean".to_string(),
+                "https://www.crossfit.com/essentials/the-hang-squat-clean".to_string(),
+            ),
+            (
+                "Hang Power Clean".to_string(),
+                "https://www.crossfit.com/essentials/the-hang-power-clean".to_string(),
+            ),
+            (
+                "Clean And Jerk".to_string(),
+                "https://www.crossfit.com/essentials/the-clean-and-jerk".to_string(),
+            ),
+            (
+                "Power Clean And Jerk".to_string(),
+                "https://www.crossfit.com/essentials/the-squat-clean-and-push-jerk".to_string(),
+            ),
+            ("Clean Pull".to_string(), "".to_string()),
+            ("Clean Deadlift".to_string(), "".to_string()),
+            (
+                "Snatch".to_string(),
+                "https://www.crossfit.com/essentials/the-snatch".to_string(),
+            ),
+            (
+                "Power Snatch".to_string(),
+                "https://www.crossfit.com/essentials/the-power-snatch".to_string(),
+            ),
+            (
+                "Hang Snatch".to_string(),
+                "https://www.crossfit.com/essentials/the-hang-snatch".to_string(),
+            ),
+            (
+                "Hang Power Snatch".to_string(),
+                "https://www.crossfit.com/essentials/the-hang-power-snatch".to_string(),
+            ),
+            (
+                "Snatch Balance".to_string(),
+                "https://www.crossfit.com/essentials/the-snatch-balance".to_string(),
+            ),
+            ("Snatch Pull".to_string(), "".to_string()),
+            ("Snatch Deadlift".to_string(), "".to_string()),
+            (
+                "Muscle Snatch".to_string(),
+                "https://www.crossfit.com/essentials/the-muscle-snatch".to_string(),
+            ),
+            ("Push Up".to_string(), "".to_string()),
+            ("Pull Up".to_string(), "".to_string()),
+            ("Chin Up".to_string(), "".to_string()),
+            ("Chest To Bar".to_string(), "".to_string()),
+            ("Muscle Up".to_string(), "".to_string()),
+            ("Bar Muscle Up".to_string(), "".to_string()),
+            ("Ring Muscle Up".to_string(), "".to_string()),
+            ("Knees To Elbows".to_string(), "".to_string()),
+            ("L Sit".to_string(), "".to_string()),
+            ("Strict Pull Up".to_string(), "".to_string()),
+            ("Strict Handstand Push Up".to_string(), "".to_string()),
+            ("Handstand Push Up".to_string(), "".to_string()),
+            ("Handstand Walk".to_string(), "".to_string()),
+            ("Wall Walk".to_string(), "".to_string()),
+            ("Handstand Hold".to_string(), "".to_string()),
+            ("Front Rack Lunge".to_string(), "".to_string()),
+            ("Back Rack Lunge".to_string(), "".to_string()),
+            ("Overhead Walking Lunge".to_string(), "".to_string()),
+            ("Burpee".to_string(), "".to_string()),
+            ("Box Jump".to_string(), "".to_string()),
+            ("Box Jump Over".to_string(), "".to_string()),
+            ("Burpee Box Jump".to_string(), "".to_string()),
+            ("Burpee Box Jump Over".to_string(), "".to_string()),
+            ("Burpee Over The Bar".to_string(), "".to_string()),
+            ("Burpee To Target".to_string(), "".to_string()),
+            ("Double Under".to_string(), "".to_string()),
+            ("Rope Climb".to_string(), "".to_string()),
+            ("Wall Ball".to_string(), "".to_string()),
+            ("Kettlebell Swing".to_string(), "".to_string()),
+            ("Turkish Get Up".to_string(), "".to_string()),
+            ("Farmer's Carry".to_string(), "".to_string()),
+            ("Sled Push".to_string(), "".to_string()),
+            ("Sled Pull".to_string(), "".to_string()),
+            ("Sled Drag".to_string(), "".to_string()),
+            ("Row".to_string(), "".to_string()),
+            ("Run".to_string(), "".to_string()),
+            ("Bike".to_string(), "".to_string()),
+            ("Echo Bike".to_string(), "".to_string()),
+            ("Ski".to_string(), "".to_string()),
+            ("Dumbbell Snatch".to_string(), "".to_string()),
+            ("Dumbbell Clean".to_string(), "".to_string()),
+            ("Dumbbell Power Clean".to_string(), "".to_string()),
+            ("Dumbbell Hang Clean".to_string(), "".to_string()),
+            ("Dumbbell Clean And Jerk".to_string(), "".to_string()),
+            ("Dumbbell Hang Clean And Jerk".to_string(), "".to_string()),
+            ("Devil Press".to_string(), "".to_string()),
+        ])
     }
 }
 

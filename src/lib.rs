@@ -8,13 +8,13 @@ pub mod weight;
 pub mod workout;
 pub mod workout_types;
 
-pub use self::movement::Movement;
+pub use self::movement::{Movement, MovementParseError};
 pub use self::rm::RM;
 pub use self::weight::Weight;
 pub use self::workout::{create_workout, Workout};
 
 pub use self::workout_types::{
-    amrap::AMRAP, emom::EMOM, for_time::ForTime, rest::Rest, workout_type::WorkoutType,
+    amrap::AMRAP, emom::EMOM, every::Every, for_time::ForTime, workout_type::WorkoutType,
 };
 
 pub use self::rep_types::{cals::Cals, distance::Distance, rep_type::RepType, reps::Reps};
@@ -26,7 +26,7 @@ use std::io::Write;
 use std::io::{self, BufRead};
 use std::path::PathBuf;
 
-use chrono::{Local, NaiveDate};
+use chrono::Local;
 
 fn today() -> String {
     Local::now().format("%d-%m-%Y").to_string()
@@ -105,7 +105,6 @@ pub fn run_base(mut filename: PathBuf, force: &bool) -> Result<(), Box<dyn std::
         .to_string_lossy()
         .replace("wod-", "")
         .replace(".md", "");
-    let file_date = get_date_from_title(title.as_str());
     // Write the markdown header of the file
     file.write_all(
         format!(
@@ -118,23 +117,14 @@ draft: false
 Workout for the day, {}.
 
 "#,
-            title, file_date, title
+            title,
+            today(),
+            title
         )
         .as_bytes(),
     )?;
 
     Ok(())
-}
-
-/// Function to obtain a date from the title.
-/// The title is a date of the form dd-mm-yy, but hugo wants
-/// the format yyyy-mm-dd
-fn get_date_from_title(title: &str) -> String {
-    let date = NaiveDate::parse_from_str(title, "%d-%m-%y")
-        .expect("Failed to parse date")
-        .format("%Y-%m-%d")
-        .to_string();
-    date
 }
 
 /// Appends a new workout to a file.
@@ -167,7 +157,14 @@ fn get_date_from_title(title: &str) -> String {
 /// // run_add_workout(filename.clone(), workout).expect("Failed to add workout");
 pub fn run_add_workout(filename: PathBuf, workout: &str) -> Result<(), Box<dyn std::error::Error>> {
     let wkt = create_workout(workout);
-    let content = wkt.write();
+    let content: String = match wkt {
+        Ok(wkt) => wkt.write(),
+        Err(e) => {
+            eprintln!("While reading workout: '{}'", workout);
+            eprintln!("Error: {:#?}", e);
+            std::process::exit(1);
+        }
+    };
 
     let mut file = OpenOptions::new()
         .append(true)
@@ -228,10 +225,86 @@ pub fn run_add_wod_from_file(
             let _ = run_add_workout(filename.clone(), &line);
         }
     }
+    println!("Creating file from WOD file: {}", filename.display());
     Ok(())
 }
 
 fn read_wodfile(filename: PathBuf) -> io::Result<io::Lines<io::BufReader<File>>> {
     let file = File::open(filename)?;
     Ok(io::BufReader::new(file).lines())
+}
+
+/// Generates a list of movements with explanatory videos in markdown format.
+///
+/// This function takes a `page` boolean to determine whether to create a markdown
+/// page or just list the links. To generate a file just redirect the content.
+///
+/// # Arguments
+///
+/// * `page` - A `bool` to decide whether this is a markdown page prepared for a Hugo blog
+///     or a list of markdown links.
+///
+/// # Returns
+///
+/// * `String` - The content as a string.
+///
+/// # Examples
+///
+/// Print the content to the console:
+///
+/// ```
+/// use wod::run_create_list_movements;
+///
+/// let movement_list = run_create_list_movements(false);
+/// let air_squat = movement_list.split("\n\n").next().unwrap();
+/// assert_eq!(
+///     air_squat,
+///     "- [Air Squat](https://www.crossfit.com/essentials/the-air-squat)".to_string()
+/// );
+pub fn run_create_list_movements(page: bool) -> String {
+    let mut content: String = "".to_string();
+    if page {
+        content.push_str(
+            r#"---
+title: "CrossFit Movements"
+description: "List of movements with explanatory video"
+---
+
+List of CrossFit movements, click on them to see an explanation.
+
+---
+
+"#,
+        )
+    }
+    content.push_str(
+        Movement::list_with_url()
+            .iter()
+            .filter_map(|(key, value)| {
+                if value.is_empty() {
+                    None
+                } else {
+                    Some(format!("- [{}]({})", key, value))
+                }
+            })
+            .collect::<Vec<_>>()
+            .join("\n\n")
+            .as_str(),
+    );
+    content
+}
+
+#[cfg(test)]
+mod test_cmd {
+    use super::*;
+
+    #[test]
+    fn test_run_list_movements() {
+        let result = run_create_list_movements(false);
+        let air_squat = result.split("\n\n").next().unwrap();
+        assert_eq!(
+            air_squat,
+            "- [Air Squat](https://www.crossfit.com/essentials/the-air-squat)".to_string()
+        );
+    }
 }

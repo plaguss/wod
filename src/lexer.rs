@@ -1,4 +1,6 @@
-use std::str::{Chars, FromStr};
+use std::error::Error;
+use std::fmt;
+use std::str::Chars;
 
 use crate::movement::Movement;
 use crate::rep_types::rep_type::RepType;
@@ -50,7 +52,7 @@ pub enum Token {
 ///
 /// let input = "ft 21-15-9 pull up, thruster @43/30kg";
 /// let mut lexer = Lexer::new(input);
-/// let tokens = lexer.tokenize();
+/// let tokens = lexer.tokenize().unwrap();
 ///
 /// assert_eq!(
 ///     tokens,
@@ -96,7 +98,7 @@ impl<'a> Lexer<'a> {
         }
     }
 
-    fn read_workout_type(&mut self) -> WorkoutType {
+    fn read_workout_type(&mut self) -> Result<WorkoutType, LexerError> {
         let mut result = String::new();
 
         while let Some(c) = self.current_char {
@@ -108,8 +110,14 @@ impl<'a> Lexer<'a> {
                 break;
             }
         }
-        let workout_type: WorkoutType = result.parse().expect("Invalid workout type");
-        workout_type
+        // let workout_type: WorkoutType = result.parse().expect("Invalid workout type");
+        let workout_type: Result<WorkoutType, _> = result.parse();
+        match workout_type {
+            Ok(workout_type) => Ok(workout_type),
+            Err(_) => Err(LexerError::InvalidWorkoutType(
+                workout_type.unwrap_err().to_string(),
+            )),
+        }
     }
 
     fn read_movement(&mut self) -> String {
@@ -170,7 +178,7 @@ impl<'a> Lexer<'a> {
         result
     }
 
-    pub fn tokenize(&mut self) -> Vec<Token> {
+    pub fn tokenize(&mut self) -> Result<Vec<Token>, LexerError> {
         let mut tokens = Vec::new();
         let mut first_token = true;
 
@@ -181,7 +189,9 @@ impl<'a> Lexer<'a> {
             }
 
             if first_token {
-                let workout_type = self.read_workout_type();
+                // TODO: This could fail, CORRECT IT
+                // let workout_type = self.read_workout_type()?;
+                let workout_type = self.read_workout_type()?;
                 tokens.push(Token::WorkoutType(workout_type));
                 first_token = false;
                 continue;
@@ -194,10 +204,12 @@ impl<'a> Lexer<'a> {
                     continue;
                 }
                 c if c.is_numeric() => {
-                    self.parse_numeric(&mut tokens);
+                    // self.parse_numeric(&mut tokens);
+                    self.parse_numeric(&mut tokens)?;
                 }
                 c if c.is_alphabetic() => {
-                    self.parse_alphabetic(&mut tokens);
+                    self.parse_alphabetic(&mut tokens)?;
+                    // self.parse_alphabetic(&mut tokens);
                 }
                 _ => {
                     // Skip any other characters, like commas
@@ -206,17 +218,27 @@ impl<'a> Lexer<'a> {
             }
         }
 
-        tokens
+        Ok(tokens)
     }
 
-    fn parse_numeric(&mut self, tokens: &mut Vec<Token>) {
-        fn process_buf(buf: &mut Vec<char>, tokens: &mut Vec<Token>) {
+    fn parse_numeric(&mut self, tokens: &mut Vec<Token>) -> Result<(), LexerError> {
+        fn process_buf(buf: &mut Vec<char>, tokens: &mut Vec<Token>) -> Result<(), LexerError> {
             if !buf.is_empty() {
-                tokens.push(Token::RepType(
-                    RepType::from_str(buf.iter().collect::<String>().as_str()).unwrap(),
-                ));
+                let maybe_rep_type = buf.iter().collect::<String>();
+                let rep_type: Result<RepType, _> = maybe_rep_type.parse();
+                match rep_type {
+                    Ok(rep_type) => {
+                        tokens.push(Token::RepType(rep_type));
+                    }
+                    Err(_) => {
+                        return Err(LexerError::InvalidRepType(
+                            rep_type.unwrap_err().to_string(),
+                        ));
+                    }
+                }
                 buf.clear();
             }
+            Ok(())
         }
         let number = self.read_number_scheme();
         // Workouts like 5x5, or 21-15-9 are parsed here
@@ -226,30 +248,42 @@ impl<'a> Lexer<'a> {
             for c in number.chars() {
                 match c {
                     'x' => {
-                        process_buf(&mut buf, tokens);
+                        process_buf(&mut buf, tokens)?;
                         tokens.push(Token::X)
                     }
                     '+' => {
-                        process_buf(&mut buf, tokens);
+                        process_buf(&mut buf, tokens)?;
                         tokens.push(Token::Plus)
                     }
                     '(' | ')' => {
                         // Skip these tokens
-                        process_buf(&mut buf, tokens);
+                        process_buf(&mut buf, tokens)?;
                     }
                     _ => buf.push(c),
                 }
             }
             // Push any pending number in the buffer
-            process_buf(&mut buf, tokens);
+            process_buf(&mut buf, tokens)?;
         } else if number.contains("kg") || number.contains('%') {
-            tokens.push(Token::Weight(
-                Weight::from_str(number.as_str()).expect("Wrong Weight format"),
-            ));
+            let w: Result<Weight, _> = number.parse();
+            match w {
+                Ok(w) => {
+                    tokens.push(Token::Weight(w));
+                }
+                Err(_) => {
+                    return Err(LexerError::InvalidWeight(w.unwrap_err().to_string()));
+                }
+            }
         } else if number.contains("rm") {
-            tokens.push(Token::RM(
-                RM::from_str(number.as_str()).expect("Invalid RM"),
-            ));
+            let rm: Result<RM, _> = number.parse();
+            match rm {
+                Ok(rm) => {
+                    tokens.push(Token::RM(rm));
+                }
+                Err(_) => {
+                    return Err(LexerError::InvalidRM(rm.unwrap_err().to_string()));
+                }
+            }
         } else if number.to_lowercase().contains('K')
             || number.contains('m')
             || number.contains('i')
@@ -257,20 +291,37 @@ impl<'a> Lexer<'a> {
             || number.contains('e')
             || number.contains('a')
         {
-            tokens.push(Token::RepType(
-                RepType::from_str(&number).expect("Invalid rep type"),
-            ));
+            let rep_type: Result<RepType, _> = number.parse();
+            match rep_type {
+                Ok(rep_type) => {
+                    tokens.push(Token::RepType(rep_type));
+                }
+                Err(_) => {
+                    return Err(LexerError::InvalidRepType(
+                        rep_type.unwrap_err().to_string(),
+                    ));
+                }
+            }
         } else {
             // Workouts like 21-15-9
             for rep in number.split('-') {
-                tokens.push(Token::RepType(
-                    RepType::from_str(rep).expect("Invalid rep type"),
-                ));
+                let rep_type: Result<RepType, _> = rep.parse();
+                match rep_type {
+                    Ok(rep_type) => {
+                        tokens.push(Token::RepType(rep_type));
+                    }
+                    Err(_) => {
+                        return Err(LexerError::InvalidRepType(
+                            rep_type.unwrap_err().to_string(),
+                        ));
+                    }
+                }
             }
         }
+        Ok(())
     }
 
-    fn parse_alphabetic(&mut self, tokens: &mut Vec<Token>) {
+    fn parse_alphabetic(&mut self, tokens: &mut Vec<Token>) -> Result<(), LexerError> {
         let mut movement = self.read_movement();
         // "max db snatch" or "max ring muscle up" will be a movement,
         // We have to strip the "max" part if occurs and assign it the corresponding token
@@ -279,8 +330,42 @@ impl<'a> Lexer<'a> {
             tokens.push(Token::RepType(RepType::Max));
         }
         if !movement.is_empty() {
-            let mov: Movement = movement.parse().expect("Invalid movement");
-            tokens.push(Token::Movement(mov));
+            // let mov: Movement = movement.parse()?;
+            // tokens.push(Token::Movement(mov));
+            let mov: Result<Movement, _> = movement.parse();
+            match mov {
+                Ok(parsed_movement) => {
+                    tokens.push(Token::Movement(parsed_movement));
+                }
+                Err(_) => {
+                    // If parsing fails, return the custom LexerError
+                    return Err(LexerError::InvalidMovement(mov.unwrap_err().to_string()));
+                }
+            }
+        }
+        Ok(())
+    }
+}
+
+#[derive(Debug)]
+pub enum LexerError {
+    InvalidWorkoutType(String),
+    InvalidWeight(String),
+    InvalidRepType(String),
+    InvalidRM(String),
+    InvalidMovement(String),
+}
+
+impl Error for LexerError {}
+
+impl fmt::Display for LexerError {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        match self {
+            LexerError::InvalidWorkoutType(s) => write!(f, "Invalid WorkoutType: {}", s),
+            LexerError::InvalidWeight(s) => write!(f, "Invalid Eright: {}", s),
+            LexerError::InvalidRepType(s) => write!(f, "Invalid RepType: {}", s),
+            LexerError::InvalidRM(s) => write!(f, "Invalid RM: {}", s),
+            LexerError::InvalidMovement(s) => write!(f, "Invalid Movement: {}", s),
         }
     }
 }
@@ -288,12 +373,13 @@ impl<'a> Lexer<'a> {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use std::str::FromStr;
 
     #[test]
     fn test_for_time() {
         let input = "ft 21-15-9 pull up, thruster @43/30kg";
         let mut lexer = Lexer::new(input);
-        let tokens = lexer.tokenize();
+        let tokens = lexer.tokenize().unwrap();
 
         assert_eq!(
             tokens,
@@ -314,7 +400,7 @@ mod tests {
     fn test_rounds() {
         let input = "5rd 20 double under, 30cal row";
         let mut lexer = Lexer::new(input);
-        let tokens = lexer.tokenize();
+        let tokens = lexer.tokenize().unwrap();
 
         assert_eq!(
             tokens,
@@ -332,7 +418,7 @@ mod tests {
     fn test_weightlifting_0() {
         let input = "wl 5x5 snatch @ 70%";
         let mut lexer = Lexer::new(input);
-        let tokens = lexer.tokenize();
+        let tokens = lexer.tokenize().unwrap();
 
         assert_eq!(
             tokens,
@@ -352,7 +438,7 @@ mod tests {
     fn test_weightlifting_0_bigger_set() {
         let input = "wl 5x10 snatch @ 70%";
         let mut lexer = Lexer::new(input);
-        let tokens = lexer.tokenize();
+        let tokens = lexer.tokenize().unwrap();
 
         assert_eq!(
             tokens,
@@ -372,7 +458,7 @@ mod tests {
     fn test_weightlifting_1() {
         let input = "wl 1rm snatch";
         let mut lexer = Lexer::new(input);
-        let tokens = lexer.tokenize();
+        let tokens = lexer.tokenize().unwrap();
 
         assert_eq!(
             tokens,
@@ -388,7 +474,7 @@ mod tests {
     fn test_weightlifting_2() {
         let input = "wl 3x(1+1+1) clean,front squat,split jerk @ 80kg";
         let mut lexer = Lexer::new(input);
-        let tokens = lexer.tokenize();
+        let tokens = lexer.tokenize().unwrap();
 
         assert_eq!(
             tokens,
@@ -414,7 +500,7 @@ mod tests {
     fn test_simple_running() {
         let input = "ft 5k run";
         let mut lexer = Lexer::new(input);
-        let tokens = lexer.tokenize();
+        let tokens = lexer.tokenize().unwrap();
 
         assert_eq!(
             tokens,
@@ -430,7 +516,7 @@ mod tests {
     fn test_ft_with_distance() {
         let input = "2rd 10m hs walk, 1 ring muscle up";
         let mut lexer = Lexer::new(input);
-        let tokens = lexer.tokenize();
+        let tokens = lexer.tokenize().unwrap();
 
         assert_eq!(
             tokens,
@@ -448,7 +534,7 @@ mod tests {
     fn test_amrap_0() {
         let input = "amrap-12 10 db snatch, 1 ring muscle up";
         let mut lexer = Lexer::new(input);
-        let tokens = lexer.tokenize();
+        let tokens = lexer.tokenize().unwrap();
 
         assert_eq!(
             tokens,
@@ -466,7 +552,7 @@ mod tests {
     fn test_amrap_1() {
         let input = "amrap-5 max ring muscle up";
         let mut lexer = Lexer::new(input);
-        let tokens = lexer.tokenize();
+        let tokens = lexer.tokenize().unwrap();
 
         assert_eq!(
             tokens,
@@ -482,7 +568,7 @@ mod tests {
     fn test_emom_0() {
         let input = "emom-10 10 pull up";
         let mut lexer = Lexer::new(input);
-        let tokens = lexer.tokenize();
+        let tokens = lexer.tokenize().unwrap();
 
         assert_eq!(
             tokens,
@@ -498,7 +584,7 @@ mod tests {
     fn test_emom_1() {
         let input = "emom-10 10 pull up, 5 push up";
         let mut lexer = Lexer::new(input);
-        let tokens = lexer.tokenize();
+        let tokens = lexer.tokenize().unwrap();
 
         assert_eq!(
             tokens,
@@ -516,7 +602,7 @@ mod tests {
     fn test_emom_2() {
         let input = "emom-8-20s-alt 12 power clean @ 60/40kg, 20cal row";
         let mut lexer = Lexer::new(input);
-        let tokens = lexer.tokenize();
+        let tokens = lexer.tokenize().unwrap();
 
         assert_eq!(
             tokens,
@@ -536,7 +622,7 @@ mod tests {
     fn test_emom_3() {
         let input = "emom-12-3-1m 15cal row, 12 toes to bar, max db clean and jerk @ 22/15kg";
         let mut lexer = Lexer::new(input);
-        let tokens = lexer.tokenize();
+        let tokens = lexer.tokenize().unwrap();
 
         assert_eq!(
             tokens,
