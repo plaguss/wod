@@ -1,6 +1,6 @@
 use std::str::FromStr;
 
-use crate::lexer::{Lexer, Token};
+use crate::lexer::{Lexer, LexerError, Token};
 use crate::movement::Movement;
 use crate::rep_types::rep_type::RepType;
 use crate::rm::RM;
@@ -265,17 +265,17 @@ impl Workout {
             reps_str
         }
         workout.push_str(&prepare_reps(&self.rep_types, &self.x, &self.plus));
-        // Format the Movements as a , separated list
+        // Format the Movements as a + separated list
         let movements = self
             .movements
             .iter()
             .map(|m| m.to_string())
             .collect::<Vec<_>>()
-            .join(", ");
+            .join(" + ");
 
         workout.push_str(&movements.to_string());
         // NOTE: Could there be more than one weight?
-        workout.push_str(&format!(" At {}\n\n", self.weights[0]));
+        workout.push_str(&format!(" @ {}\n\n", self.weights[0]));
         workout
     }
 
@@ -314,12 +314,12 @@ impl Workout {
 
 /// Create a workout from a string
 /// ADD EXAMPLE
-pub fn create_workout(workout: &str) -> Workout {
+pub fn create_workout(workout: &str) -> Result<Workout, LexerError> {
     let mut lexer = Lexer::new(workout);
-    let tokens = lexer.tokenize();
+    let tokens = lexer.tokenize()?;
     let mut workout = Workout::default();
     workout.parse(tokens);
-    workout
+    Ok(workout)
 }
 
 #[cfg(test)]
@@ -403,6 +403,15 @@ mod tests {
             ],
         };
 
-        assert_eq!(create_workout(workout), expected);
+        assert_eq!(create_workout(workout).unwrap(), expected);
+    }
+
+    #[test]
+    fn test_create_workout_error() {
+        let workout = "ft 21-15-9 pulup, thruster @ 43/30kg";
+        let expected =
+            "Invalid Movement: Invalid movement: `pulup`, did you mean: `pull up`?".to_string();
+        let workout = create_workout(workout);
+        assert_eq!(workout.unwrap_err().to_string(), expected);
     }
 }
