@@ -64,10 +64,10 @@ mod testing {
     #[test]
     fn test_emom_2() {
         let workout = create_workout(
-            "emom-12-3-1m 15cal row, 12 toes to bar, max db clean and jerk @ 22/15kg",
+            "emom-12-3m-r1m 15cal row, 12 toes to bar, max db clean and jerk @ 22/15kg",
         )
         .unwrap();
-        let expected = "---\n\n**EMOM 12 minutes**\n\nEvery 3 minutes, rest 1 minute\n\n- 15 calories Row\n\n- 12 Toes To Bar\n\n- Max reps of Dumbbell Clean and Jerk At 22/15kg\n\n";
+        let expected = "---\n\n**EMOM 12 minutes**\n\nwork every 3 minutes, rest 1 minute\n\n- 15 calories Row\n\n- 12 Toes To Bar\n\n- Max reps of Dumbbell Clean and Jerk At 22/15kg\n\n";
         assert_eq!(workout.write(), expected);
     }
 }
