@@ -7,21 +7,65 @@ use crate::rm::RM;
 use crate::weight::Weight;
 use crate::WorkoutType;
 
+/// Represents a structured workout with various components such as movements, repetitions,
+/// and weights. Supports different workout types like "For Time", "EMOM", "Weightlifting", etc.
+///
+/// This struct stores both the parsed workout data and the original tokens, allowing
+/// for both structured access to workout components and the ability to format the workout
+/// in a human-readable way.
+///
+/// # Examples
+///
+/// ```
+/// use wod::{Workout, WorkoutType, RepType, Movement, Weight};
+/// use wod::lexer::Token;
+///
+/// let tokens = vec![
+///     Token::WorkoutType("ft".parse::<WorkoutType>().unwrap()),
+///     Token::RepType("21".parse::<RepType>().unwrap()),
+///     Token::Movement("pull up".parse::<Movement>().unwrap()),
+///     Token::RepType("21".parse::<RepType>().unwrap()),
+///     Token::Movement("thruster".parse::<Movement>().unwrap()),
+///     Token::Weight("95lb".parse::<Weight>().unwrap()),
+/// ];
+///
+/// let mut workout = Workout::new(tokens, Some("Fran".to_string()));
+/// workout.parse();
+///
+/// println!("{}", workout.write());
+/// ```
 #[derive(Debug, PartialEq)]
 pub struct Workout {
+    /// The type of workout (ForTime, EMOM, Weightlifting, etc.)
     pub workout_type: WorkoutType,
+    /// List of movements included in the workout
     pub movements: Vec<Movement>,
+    /// List of repetition types
     pub rep_types: Vec<RepType>,
+    /// List of weights used in the workout
     pub weights: Vec<Weight>,
-    // TODO: These aren't clear yet
+    /// Optional collection of "x" tokens that may appear in the workout description
+    /// (e.g., "3x5" repetition scheme)
     pub x: Option<Vec<Token>>,
+    /// Optional collection of "@" tokens that may appear in the workout description
+    /// (e.g., "back squat @100kg")
     pub at: Option<Vec<Token>>,
+    /// Optional collection of "+" tokens that may appear in the workout description
+    /// (e.g., "2+2+2" repetition scheme)
     pub plus: Option<Vec<Token>>,
+    /// Optional collection of "RM" (repetition maximum) tokens
+    /// (e.g., "5RM" for 5 repetition maximum)
     pub rm: Option<Vec<RM>>,
+    /// The raw tokens that make up the workout, preserving the original structure
     tokens: Vec<Token>,
+    /// Optional comments/notes about the workout
+    comments: Option<String>,
+    /// Optional name of the workout. Some workouts are given a name, i.e. "Fran".
+    name: Option<String>,
 }
 
 impl Default for Workout {
+    /// Creates a default Workout with "For Time" workout type and empty collections.
     fn default() -> Self {
         Workout {
             workout_type: WorkoutType::from_str("ft").unwrap(),
@@ -33,17 +77,39 @@ impl Default for Workout {
             plus: None,
             rm: None,
             tokens: Vec::new(),
+            comments: None,
+            name: None,
         }
     }
 }
 
 impl Workout {
-    // TODO: Create a new method that takes the tokens and parses them.
+    /// Creates a new Workout from a vector of tokens and optional comments.
+    ///
+    /// # Arguments
+    ///
+    /// * `tokens` - A vector of `Token` that represents the workout components
+    /// * `comments` - Optional comments or notes about the workout
+    /// * `name` - Optional name for the workout
+    ///
+    /// # Returns
+    ///
+    /// A new `Workout` instance with the given tokens and comments
+    pub fn new(tokens: Vec<Token>, comments: Option<String>, name: Option<String>) -> Self {
+        let mut wkt = Workout::default();
+        wkt.tokens = tokens;
+        wkt.comments = comments;
+        wkt.name = name;
+        wkt
+    }
 
-    pub fn parse(&mut self, tokens: Vec<Token>) {
-        // TODO: Update this to get the own the tokens instead of cloning them
-        // When is time to print the workout, will have to order the things here
-        for token in &tokens {
+    /// Parses the tokens stored in the workout and populates the structured fields.
+    ///
+    /// This method analyzes the tokens vector and extracts specific workout components
+    /// like workout type, movements, repetition types, weights, etc. into their respective
+    /// fields for easier access and manipulation.
+    pub fn parse(&mut self) {
+        for token in &self.tokens {
             match token {
                 Token::WorkoutType(workout_type) => {
                     self.workout_type = workout_type.clone();
@@ -83,13 +149,23 @@ impl Workout {
                 }
             }
         }
-        self.tokens = tokens;
     }
 
-    // Method to write the workout to a string to be printed
+    /// Formats the workout into a human-readable string representation.
+    ///
+    /// The formatting depends on the workout type (ForTime, EMOM, Weightlifting, etc.)
+    /// and includes headers, movement descriptions, repetition schemes, and comments.
+    ///
+    /// # Returns
+    ///
+    /// A formatted string representation of the workout.
     pub fn write(&self) -> String {
-        // Should be dependent on the workout type???
-        let mut workout = String::new();
+        // Start from a markdown section separator
+        let mut workout = String::from("---");
+
+        if self.name.is_some() {
+            workout.push_str(&format!("\n\n*{}*", self.name.as_ref().unwrap()));
+        }
 
         match &self.workout_type {
             WorkoutType::ForTime(_ft) => {
@@ -112,12 +188,22 @@ impl Workout {
             }
         }
 
+        if self.comments.is_some() {
+            workout.push_str(&self.get_comments());
+        }
+
         workout
     }
 
-    /// Get the header for the workout
-    /// The header will be the workout type in bold, and the rest of the text in normal font.
-    /// An initial --- separator to allow differentiating the blocks in the WOD.
+    /// Generates a formatted header for the workout based on its type.
+    ///
+    /// # Arguments
+    ///
+    /// * `workout_type` - A string representing the workout type abbreviation
+    ///
+    /// # Returns
+    ///
+    /// A formatted header string with appropriate markdown formatting.
     fn get_header(&self, workout_type: &str) -> String {
         if workout_type == "emom" {
             let header = format!("{}", self.workout_type);
@@ -134,12 +220,20 @@ impl Workout {
                 })
                 .collect::<Vec<String>>()
                 .join(separator);
-            format!("---\n\n{}\n\n", formatted_header)
+            format!("\n\n{}\n\n", formatted_header)
         } else {
-            format!("---\n\n**{}**\n\n", self.workout_type)
+            format!("\n\n**{}**\n\n", self.workout_type)
         }
     }
 
+    /// Formats a "For Time" workout into a human-readable string.
+    ///
+    /// Handles special cases like "21-15-9" rep schemes and combines movements
+    /// with their associated weights and repetitions.
+    ///
+    /// # Returns
+    ///
+    /// A formatted string representation of the "For Time" workout.
     fn write_for_time(&self) -> String {
         // TODO: We need some kind of identifier for workouts that have reps informed as 21-15-9
         // Check this behaviour within the tokens
@@ -219,9 +313,14 @@ impl Workout {
         workout
     }
 
-    // Weightlifting workout type will be formatted using directly the tokens:
-    // **Weightlifting**
-    // Expects Rep Types, with any x or + in between, then the movements, and the weight
+    /// Formats a "Weightlifting" workout into a human-readable string.
+    ///
+    /// Handles repetition schemes like "3x3", "2+2", or "2x(2+2)" and combines
+    /// movements with their associated weights.
+    ///
+    /// # Returns
+    ///
+    /// A formatted string representation of the "Weightlifting" workout.
     fn write_weightlifting(&self) -> String {
         let mut workout = String::new();
         fn prepare_reps(
@@ -279,10 +378,14 @@ impl Workout {
         workout
     }
 
+    /// Formats an "EMOM" (Every Minute On the Minute) workout into a human-readable string.
+    ///
+    /// # Returns
+    ///
+    /// A formatted string representation of the "EMOM" workout.
     fn write_emom(&self) -> String {
         let mut workout = String::new();
         // Format the Rounds
-        println!("{:?}", self.workout_type);
         let mut first_rep = true;
         // TODO: This is the same function used in the For Time (general case),
         // Refactor to avoid code duplication
@@ -310,15 +413,67 @@ impl Workout {
 
         workout
     }
+
+    /// Formats the workout comments into a human-readable string.
+    ///
+    /// # Returns
+    ///
+    /// A formatted string representation of the workout comments.
+    fn get_comments(&self) -> String {
+        let prepared_contents = self.comments.as_ref().unwrap();
+        let comments: String = if prepared_contents.contains("\n") {
+            prepared_contents
+                .split("\n")
+                .map(|part| format!("*{}*", part))
+                .collect::<Vec<_>>()
+                .join("\n")
+        } else {
+            format!("*{}*", prepared_contents)
+        };
+
+        format!("Comments: {}\n\n", comments)
+    }
 }
 
-/// Create a workout from a string
-/// ADD EXAMPLE
-pub fn create_workout(workout: &str) -> Result<Workout, LexerError> {
+/// Creates a `Workout` object from a workout string and optional comments.
+///
+/// This function parses a workout string into a structured `Workout` object by:
+/// 1. Tokenizing the input string with a `Lexer`
+/// 2. Creating a new `Workout` from the tokens and optional comments
+/// 3. Parsing the tokens to populate the `Workout` structure
+///
+/// # Arguments
+/// * `workout` - A string slice containing the workout description to be parsed
+/// * `comments` - Optional comments to be associated with the workout
+///
+/// # Returns
+/// * `Result<Workout, LexerError>` - A `Workout` object if parsing succeeds, or a `LexerError` if tokenization fails
+///
+/// # Examples
+///
+/// ```
+/// use wod::{create_workout, WorkoutType};
+///
+/// let workout = "ft 21-15-9 pull up, thruster @ 43/30kg";
+/// let result = create_workout(workout, None);
+/// assert!(result.is_ok());
+///
+/// let workout_obj = result.unwrap();
+/// assert_eq!(workout_obj.workout_type, "ft".parse::<WorkoutType>().unwrap());
+/// ```
+///
+/// # Errors
+///
+/// This function will return a `LexerError` if the `Lexer` fails to tokenize the input string.
+pub fn create_workout(
+    workout: &str,
+    comments: Option<String>,
+    name: Option<String>,
+) -> Result<Workout, LexerError> {
     let mut lexer = Lexer::new(workout);
     let tokens = lexer.tokenize()?;
-    let mut workout = Workout::default();
-    workout.parse(tokens);
+    let mut workout = Workout::new(tokens, comments, name);
+    workout.parse();
     Ok(workout)
 }
 
@@ -340,8 +495,8 @@ mod tests {
             Token::Movement(Movement::from_str("thruster").unwrap()),
         ];
 
-        let mut workout = Workout::default();
-        workout.parse(tokens);
+        let mut workout = Workout::new(tokens, None, None);
+        workout.parse();
 
         assert_eq!(workout.movements.len(), 2);
         assert_eq!(workout.rep_types.len(), 3);
@@ -365,8 +520,8 @@ mod tests {
             Token::Movement(Movement::from_str("thruster").unwrap()),
         ];
 
-        let mut workout = Workout::default();
-        workout.parse(tokens);
+        let mut workout = Workout::new(tokens, None, None);
+        workout.parse();
 
         let expected = "---\n\n**For Time**\n\n21-15-9\n\n- Pull Up\n\n- Thruster\n\n";
         assert_eq!(workout.write(), expected);
@@ -401,9 +556,11 @@ mod tests {
                 Token::At,
                 Token::Weight(Weight::from_str("43/30kg").unwrap()),
             ],
+            comments: None,
+            name: None,
         };
 
-        assert_eq!(create_workout(workout).unwrap(), expected);
+        assert_eq!(create_workout(workout, None, None).unwrap(), expected);
     }
 
     #[test]
@@ -411,7 +568,38 @@ mod tests {
         let workout = "ft 21-15-9 pulup, thruster @ 43/30kg";
         let expected =
             "Invalid Movement: Invalid movement: `pulup`, did you mean: `pull up`?".to_string();
-        let workout = create_workout(workout);
+        let workout = create_workout(workout, None, None);
         assert_eq!(workout.unwrap_err().to_string(), expected);
+    }
+
+    #[test]
+    fn test_create_workout_with_comments() {
+        let workout_str = "ft 21-15-9 pull up, thruster @ 43/30kg";
+        let expected =
+        "---\n\n**For Time**\n\n21-15-9\n\n- Pull Up\n\n- Thruster At 43/30kg\n\nComments: *blabla*\n\n".to_string();
+        let comments = Some("blabla".to_string());
+        let workout = create_workout(workout_str, comments, None).unwrap();
+        let content = workout.write();
+        assert_eq!(content, expected);
+
+        // Test the case of \n in the comments.
+        let expected =
+        "---\n\n**For Time**\n\n21-15-9\n\n- Pull Up\n\n- Thruster At 43/30kg\n\nComments: *blabla*\n*other line*\n\n".to_string();
+        let comments = Some("blabla\nother line".to_string());
+        let workout = create_workout(workout_str, comments, None).unwrap();
+        let content = workout.write();
+        assert_eq!(content, expected);
+    }
+
+    #[test]
+    fn test_create_workout_with_name() {
+        let workout_str = "ft 21-15-9 pull up, thruster @ 43/30kg";
+        let expected =
+            "---\n\n*Fran*\n\n**For Time**\n\n21-15-9\n\n- Pull Up\n\n- Thruster At 43/30kg\n\n"
+                .to_string();
+        let name = Some("Fran".to_string());
+        let workout = create_workout(workout_str, None, name).unwrap();
+        let content = workout.write();
+        assert_eq!(content, expected);
     }
 }

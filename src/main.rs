@@ -15,7 +15,12 @@ fn main() {
         Some(Commands::Add(add_command)) => {
             // The add command "wod add 'workout' -f 'date-filename.md' "
             let filename = PathBuf::from(add_command.filename.to_string());
-            let _ = run_add_workout(filename, &add_command.workout);
+            let _ = run_add_workout(
+                filename,
+                &add_command.workout,
+                add_command.comments.clone(),
+                None,
+            );
             println!("Added workout to file: {}", add_command.filename);
         }
         Some(Commands::List(list_command)) => {

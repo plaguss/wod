@@ -41,6 +41,14 @@ pub struct AddCommand {
     /// The workout to add, i.e. "4rd 21 box jump over, 15 bar mu".
     #[arg(required = true)]
     pub workout: String,
+
+    /// Comments for a workout, i.e. "T.C. 15'" or "Instead of Bar Mu do Other Movement".
+    #[arg(short, long, default_value = None)]
+    pub comments: Option<String>,
+
+    /// Name for the workout, i.e. "Fran", or "Open 25.2" if any.
+    #[arg(short, long, default_value = None)]
+    pub name: Option<String>,
 }
 
 #[derive(Parser, Debug)]

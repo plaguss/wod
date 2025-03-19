@@ -31,7 +31,7 @@ use std::path::PathBuf;
 use chrono::Local;
 
 fn today() -> String {
-    Local::now().format("%d-%m-%Y").to_string()
+    Local::now().format("%Y-%m-%d").to_string()
 }
 
 /// Get the default filename for the workout of the day
@@ -156,13 +156,16 @@ Workout for the day, {}.
 ///
 /// // let filename = PathBuf::from("workouts.txt");
 /// // let workout = "wl 3x4 push press @75%";
+/// // let comments = None;
+/// // let name = None;
 /// // run_add_workout(filename.clone(), workout).expect("Failed to add workout");
 pub fn run_add_workout(
     filename: PathBuf,
     workout: &str,
     comments: Option<String>,
+    name: Option<String>,
 ) -> Result<(), Box<dyn std::error::Error>> {
-    let wkt = create_workout(workout, comments);
+    let wkt = create_workout(workout, comments, name);
     let content: String = match wkt {
         Ok(wkt) => wkt.write(),
         Err(e) => {
@@ -267,8 +270,8 @@ pub fn run_add_wod_from_file(
 
     for line in lines.map_while(Result::ok) {
         match parse_line(&line) {
-            Ok((workout, comments, _name)) => {
-                run_add_workout(filename.clone(), workout, comments)?;
+            Ok((workout, comments, name)) => {
+                run_add_workout(filename.clone(), workout, comments, name)?;
             }
             Err(err) => {
                 eprintln!("Error parsing line. {}", err);
