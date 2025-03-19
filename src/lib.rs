@@ -19,6 +19,8 @@ pub use self::workout_types::{
 
 pub use self::rep_types::{cals::Cals, distance::Distance, rep_type::RepType, reps::Reps};
 
+use std::error::Error;
+use std::fmt;
 use std::fs;
 use std::fs::File;
 use std::fs::OpenOptions;
@@ -155,8 +157,12 @@ Workout for the day, {}.
 /// // let filename = PathBuf::from("workouts.txt");
 /// // let workout = "wl 3x4 push press @75%";
 /// // run_add_workout(filename.clone(), workout).expect("Failed to add workout");
-pub fn run_add_workout(filename: PathBuf, workout: &str) -> Result<(), Box<dyn std::error::Error>> {
-    let wkt = create_workout(workout);
+pub fn run_add_workout(
+    filename: PathBuf,
+    workout: &str,
+    comments: Option<String>,
+) -> Result<(), Box<dyn std::error::Error>> {
+    let wkt = create_workout(workout, comments);
     let content: String = match wkt {
         Ok(wkt) => wkt.write(),
         Err(e) => {
@@ -217,12 +223,56 @@ pub fn run_add_wod_from_file(
     filename: PathBuf,
     wodfile: PathBuf,
 ) -> Result<(), Box<dyn std::error::Error>> {
-    let _ = run_base(filename.clone(), &true);
+    run_base(filename.clone(), &true)?;
 
-    if let Ok(lines) = read_wodfile(wodfile) {
-        // Consumes the iterator, returns an (Optional) String
-        for line in lines.map_while(Result::ok) {
-            let _ = run_add_workout(filename.clone(), &line);
+    let lines = read_wodfile(wodfile)?;
+
+    fn parse_line(line: &str) -> Result<(&str, Option<String>, Option<String>), WodFileError> {
+        let sections: Vec<&str> = line.split('|').collect();
+        let (workout, comments, name) = match sections.len() {
+            1 => (sections[0], None, None),
+            2 => (
+                sections[0],
+                if sections[1].is_empty() {
+                    None
+                } else {
+                    Some(sections[1].to_string())
+                },
+                None,
+            ),
+            3 => (
+                sections[0],
+                if sections[1].is_empty() {
+                    None
+                } else {
+                    Some(sections[1].to_string())
+                },
+                if sections[2].is_empty() {
+                    None
+                } else {
+                    Some(sections[2].to_string())
+                },
+            ),
+            _ => {
+                return Err(WodFileError::InvalidFile(format!(
+                    "Invalid format, expected 1-3 parts, got {}, content: '{}'",
+                    sections.len(),
+                    line
+                )))
+            }
+        };
+
+        Ok((workout, comments, name))
+    }
+
+    for line in lines.map_while(Result::ok) {
+        match parse_line(&line) {
+            Ok((workout, comments, _name)) => {
+                run_add_workout(filename.clone(), workout, comments)?;
+            }
+            Err(err) => {
+                eprintln!("Error parsing line. {}", err);
+            }
         }
     }
     println!("Creating file from WOD file: {}", filename.display());
@@ -232,6 +282,21 @@ pub fn run_add_wod_from_file(
 fn read_wodfile(filename: PathBuf) -> io::Result<io::Lines<io::BufReader<File>>> {
     let file = File::open(filename)?;
     Ok(io::BufReader::new(file).lines())
+}
+
+#[derive(Debug)]
+enum WodFileError {
+    InvalidFile(String),
+}
+
+impl Error for WodFileError {}
+
+impl fmt::Display for WodFileError {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        match self {
+            WodFileError::InvalidFile(s) => write!(f, "Invalid wodfile: {}", s),
+        }
+    }
 }
 
 /// Generates a list of movements with explanatory videos in markdown format.
