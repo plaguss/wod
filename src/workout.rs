@@ -276,7 +276,7 @@ impl Workout {
                     }
                     Token::Weight(weight) => {
                         was_movement = false;
-                        workout.push_str(&format!(" At {}\n\n", weight));
+                        workout.push_str(&format!(" @ {}\n\n", weight));
                     }
                     _ => {}
                 }
@@ -303,7 +303,7 @@ impl Workout {
                         workout.push_str(&format!("{}", movement));
                     }
                     Token::Weight(weight) => {
-                        workout.push_str(&format!(" At {}", weight));
+                        workout.push_str(&format!(" @ {}", weight));
                     }
                     _ => {}
                 }
@@ -404,7 +404,7 @@ impl Workout {
                     workout.push_str(&format!("{}", movement));
                 }
                 Token::Weight(weight) => {
-                    workout.push_str(&format!(" At {}", weight));
+                    workout.push_str(&format!(" @ {}", weight));
                 }
                 _ => {}
             }
