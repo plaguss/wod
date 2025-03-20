@@ -13,3 +13,7 @@ lint:
 test-all:
 	cargo test --lib
 	cargo test --doc
+
+.PHONY: install
+install:
+	cargo install --path .
