@@ -33,10 +33,10 @@ fn main() {
             if cli.wodfile.is_some() {
                 // Check/Parse the filename
                 let wodfile = PathBuf::from(cli.wodfile.unwrap());
-                let _ = run_add_wod_from_file(filename, wodfile);
+                let _ = run_add_wod_from_file(filename, wodfile, cli.file_date);
             } else {
                 println!("Creating file: {}", filename.display());
-                let _ = run_base(filename, &cli.force);
+                let _ = run_base(filename, &cli.force, cli.file_date);
             }
         }
     }

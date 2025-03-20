@@ -1,6 +1,6 @@
 use clap::{Parser, Subcommand};
 
-use wod::default_filename;
+use wod::{default_filename, today};
 
 #[derive(Parser, Debug)]
 #[command(author, version, about, long_about = None)]
@@ -14,6 +14,11 @@ pub struct Cli {
     /// to `wod add <workout>`.
     #[arg(short, long)]
     pub wodfile: Option<String>,
+
+    /// A date that will be used in the metadata of the generated file.
+    /// It must be in format: "YYYY-MM-DD"
+    #[arg(short, long, default_value_t = today())]
+    pub file_date: String,
 
     /// Subcommands
     #[command(subcommand)]

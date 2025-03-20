@@ -30,7 +30,8 @@ use std::path::PathBuf;
 
 use chrono::Local;
 
-fn today() -> String {
+/// Returns today's date as "YYYY-MM-DD"
+pub fn today() -> String {
     Local::now().format("%Y-%m-%d").to_string()
 }
 
@@ -50,6 +51,8 @@ pub fn default_filename() -> String {
 ///
 /// * `filename` - A mutable `PathBuf` representing the path to the file.
 /// * `force` - A reference to a boolean indicating whether to overwrite the file if it exists.
+/// * `date` - Optional date to include in the file metadata. This file will be
+///   used by Hugo to sort the pages. If not given, the current day will be used.
 ///
 /// # Returns
 ///
@@ -71,7 +74,11 @@ pub fn default_filename() -> String {
 /// //     Err(e) => eprintln!("Error: {}", e),
 /// // }
 /// ```
-pub fn run_base(mut filename: PathBuf, force: &bool) -> Result<(), Box<dyn std::error::Error>> {
+pub fn run_base(
+    mut filename: PathBuf,
+    force: &bool,
+    date: String,
+) -> Result<(), Box<dyn std::error::Error>> {
     if filename
         .extension()
         .map_or(String::from("default_extension"), |ext| {
@@ -107,6 +114,7 @@ pub fn run_base(mut filename: PathBuf, force: &bool) -> Result<(), Box<dyn std::
         .to_string_lossy()
         .replace("wod-", "")
         .replace(".md", "");
+
     // Write the markdown header of the file
     file.write_all(
         format!(
@@ -119,9 +127,7 @@ draft: false
 Workout for the day, {}.
 
 "#,
-            title,
-            today(),
-            title
+            title, date, title
         )
         .as_bytes(),
     )?;
@@ -197,6 +203,9 @@ pub fn run_add_workout(
 /// * `filename` - A `PathBuf` representing the path to the file where the workout
 ///                will be appended.
 /// * `wodfile` - A `PathBuf` representing the path to the file containing the workouts.
+/// * `date` - A date that will be used as in Hugo's metadata to sort the files.
+///     It must be informed in "YYYY-MM-DD", the CLI will fill this value with the current
+///     day by default.
 ///
 /// # Returns
 ///
@@ -221,12 +230,13 @@ pub fn run_add_workout(
 ///
 /// // let filename = PathBuf::from("workouts.md");
 /// // let wodfile = PathBuf::from(".example_wod.wod");
-/// // run_add_wod_from_file(filename.clone(), wodfile.clone()).expect("Failed create WOD from file");
+/// // run_add_wod_from_file(filename.clone(), wodfile.clone(), "2025-03-19".to_string()).expect("Failed create WOD from file");
 pub fn run_add_wod_from_file(
     filename: PathBuf,
     wodfile: PathBuf,
+    date: String,
 ) -> Result<(), Box<dyn std::error::Error>> {
-    run_base(filename.clone(), &true)?;
+    run_base(filename.clone(), &true, date)?;
 
     let lines = read_wodfile(wodfile)?;
 
