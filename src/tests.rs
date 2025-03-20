@@ -9,7 +9,7 @@ mod testing {
     #[test]
     fn test_for_time_0() {
         let workout = create_workout("ft 21-15-9 pull up, thruster @43/30kg", None, None).unwrap();
-        let expected = "---\n\n**For Time**\n\n21-15-9\n\n- Pull Up\n\n- Thruster At 43/30kg\n\n";
+        let expected = "---\n\n**For Time**\n\n21-15-9\n\n- Pull Up\n\n- Thruster @ 43/30kg\n\n";
         assert_eq!(workout.write(), expected);
     }
 
@@ -29,7 +29,7 @@ mod testing {
             None,
         )
         .unwrap();
-        let expected = "---\n\n**3 rounds for time**\n\n- 15 Chest To Bar\n\n- 15 calories Echo Bike\n\n- 15 Thruster At 40kg\n\n";
+        let expected = "---\n\n**3 rounds for time**\n\n- 15 Chest To Bar\n\n- 15 calories Echo Bike\n\n- 15 Thruster @ 40kg\n\n";
         assert_eq!(workout.write(), expected);
     }
 
@@ -69,7 +69,7 @@ mod testing {
             None,
         )
         .unwrap();
-        let expected = "---\n\n**EMOM 12 minutes**\n\n- 15 calories Row\n\n- 12 Toes To Bar\n\n- Max reps of Dumbbell Clean and Jerk At 22/15kg\n\n";
+        let expected = "---\n\n**EMOM 12 minutes**\n\n- 15 calories Row\n\n- 12 Toes To Bar\n\n- Max reps of Dumbbell Clean and Jerk @ 22/15kg\n\n";
         assert_eq!(workout.write(), expected);
     }
 
@@ -81,7 +81,7 @@ mod testing {
             None,
         )
         .unwrap();
-        let expected = "---\n\n**EMOM 12 minutes**\n\nwork every 3 minutes, rest 1 minute\n\n- 15 calories Row\n\n- 12 Toes To Bar\n\n- Max reps of Dumbbell Clean and Jerk At 22/15kg\n\n";
+        let expected = "---\n\n**EMOM 12 minutes**\n\nwork every 3 minutes, rest 1 minute\n\n- 15 calories Row\n\n- 12 Toes To Bar\n\n- Max reps of Dumbbell Clean and Jerk @ 22/15kg\n\n";
         assert_eq!(workout.write(), expected);
     }
 }

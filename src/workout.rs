@@ -576,7 +576,7 @@ mod tests {
     fn test_create_workout_with_comments() {
         let workout_str = "ft 21-15-9 pull up, thruster @ 43/30kg";
         let expected =
-        "---\n\n**For Time**\n\n21-15-9\n\n- Pull Up\n\n- Thruster At 43/30kg\n\nComments: *blabla*\n\n".to_string();
+        "---\n\n**For Time**\n\n21-15-9\n\n- Pull Up\n\n- Thruster @ 43/30kg\n\nComments: *blabla*\n\n".to_string();
         let comments = Some("blabla".to_string());
         let workout = create_workout(workout_str, comments, None).unwrap();
         let content = workout.write();
@@ -584,7 +584,7 @@ mod tests {
 
         // Test the case of \n in the comments.
         let expected =
-        "---\n\n**For Time**\n\n21-15-9\n\n- Pull Up\n\n- Thruster At 43/30kg\n\nComments: *blabla*\n*other line*\n\n".to_string();
+        "---\n\n**For Time**\n\n21-15-9\n\n- Pull Up\n\n- Thruster @ 43/30kg\n\nComments: *blabla*\n*other line*\n\n".to_string();
         let comments = Some("blabla\nother line".to_string());
         let workout = create_workout(workout_str, comments, None).unwrap();
         let content = workout.write();
@@ -595,7 +595,7 @@ mod tests {
     fn test_create_workout_with_name() {
         let workout_str = "ft 21-15-9 pull up, thruster @ 43/30kg";
         let expected =
-            "---\n\n*Fran*\n\n**For Time**\n\n21-15-9\n\n- Pull Up\n\n- Thruster At 43/30kg\n\n"
+            "---\n\n*Fran*\n\n**For Time**\n\n21-15-9\n\n- Pull Up\n\n- Thruster @ 43/30kg\n\n"
                 .to_string();
         let name = Some("Fran".to_string());
         let workout = create_workout(workout_str, None, name).unwrap();
