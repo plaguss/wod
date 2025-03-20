@@ -17,7 +17,7 @@ pub struct Cli {
 
     /// A date that will be used in the metadata of the generated file.
     /// It must be in format: "YYYY-MM-DD"
-    #[arg(short, long, default_value_t = today())]
+    #[arg(long, default_value_t = today())]
     pub file_date: String,
 
     /// Languages for the files, as expected by Hugo.
