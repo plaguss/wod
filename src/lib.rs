@@ -128,12 +128,27 @@ pub fn run_base(
             .truncate(true)
             .open(filename)?;
 
+        // let title = filename
+        //     .file_name()
+        //     .unwrap()
+        //     .to_string_lossy()
+        //     .replace("wod-", "")
+        //     .replace(".md", "")
+        //     .replace(".es", "");  // Remove language file extension
+
+        // let title = filename
+        //     .file_stem()
+        //     .unwrap()
+        //     .to_string_lossy()
+        //     .replace("wod-", "");
         let title = filename
             .file_name()
             .unwrap()
             .to_string_lossy()
-            .replace("wod-", "")
-            .replace(".md", "");
+            .split('.')
+            .next()
+            .unwrap_or("")
+            .replace("wod-", "");
 
         // Write the markdown header of the file
         file.write_all(
