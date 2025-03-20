@@ -20,13 +20,23 @@ pub struct Cli {
     #[arg(short, long, default_value_t = today())]
     pub file_date: String,
 
-    /// Subcommands
-    #[command(subcommand)]
-    pub command: Option<Commands>,
+    /// Languages for the files, as expected by Hugo.
+    /// It must be a comma separated list of [ISO code](https://en.wikipedia.org/wiki/List_of_ISO_639_language_codes).
+    /// By default is not informed, and no language
+    /// extension will be added to the file.
+    ///
+    /// If this value is informed, the default file will be written,
+    /// and one more per language. So "en,it" will generate 3 files.
+    #[arg(short, long)]
+    pub languages: Option<String>,
 
     /// Whether to force overwriting an existing file, defaults to false.
     #[arg(short, long, default_value = "false")]
     pub force: bool,
+
+    /// Subcommands
+    #[command(subcommand)]
+    pub command: Option<Commands>,
 }
 
 #[derive(Subcommand, Debug)]

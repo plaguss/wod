@@ -29,7 +29,10 @@ use crate::WorkoutType;
 ///     Token::Weight("95lb".parse::<Weight>().unwrap()),
 /// ];
 ///
-/// let mut workout = Workout::new(tokens, Some("Fran".to_string()));
+/// let comments: Option<String> = None;
+/// let name: Option<String> = Some("Fran".to_string());
+///
+/// let mut workout = Workout::new(tokens, comments, name);
 /// workout.parse();
 ///
 /// println!("{}", workout.write());
@@ -96,11 +99,12 @@ impl Workout {
     ///
     /// A new `Workout` instance with the given tokens and comments
     pub fn new(tokens: Vec<Token>, comments: Option<String>, name: Option<String>) -> Self {
-        let mut wkt = Workout::default();
-        wkt.tokens = tokens;
-        wkt.comments = comments;
-        wkt.name = name;
-        wkt
+        Workout {
+            tokens,
+            comments,
+            name,
+            ..Default::default()
+        }
     }
 
     /// Parses the tokens stored in the workout and populates the structured fields.
@@ -451,11 +455,26 @@ impl Workout {
 ///
 /// # Examples
 ///
+/// ## Create a base workout
 /// ```
 /// use wod::{create_workout, WorkoutType};
 ///
 /// let workout = "ft 21-15-9 pull up, thruster @ 43/30kg";
-/// let result = create_workout(workout, None);
+/// let result = create_workout(workout, None, None);
+/// assert!(result.is_ok());
+///
+/// let workout_obj = result.unwrap();
+/// assert_eq!(workout_obj.workout_type, "ft".parse::<WorkoutType>().unwrap());
+/// ```
+///
+/// ## Optionally add a name and or comments
+/// ```
+/// use wod::{create_workout, WorkoutType};
+///
+/// let workout = "ft 21-15-9 pull up, thruster @ 43/30kg";
+/// let name: Option<String> = Some("Fran".to_string());
+/// let comments: Option<String> = Some("Go as fast as possible".to_string());
+/// let result = create_workout(workout, None, None);
 /// assert!(result.is_ok());
 ///
 /// let workout_obj = result.unwrap();
