@@ -165,11 +165,11 @@ Workout for the day, {}.
             let mut filename = filename.clone();
             if filename.extension().is_none() {
                 let ext = if lang == "en" {
-                    "md"
+                    "md".to_string()
                 } else {
-                    &format!("{}.md", lang)
+                    format!("{}.md", lang)
                 };
-                filename.set_extension(ext);
+                filename.set_extension(&ext);
             }
             filename
         };
