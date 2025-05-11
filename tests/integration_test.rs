@@ -200,15 +200,18 @@ fn test_run_add_wod_from_file_invalid_format() -> Result<(), Box<dyn std::error:
     // Tests the wod file will have no workout data.
     // Create a temporary directory for our test files
     let temp_dir = TempDir::new()?;
-    
+
     // Create test WOD file with invalid format (too many pipe separators)
     let wod_file_path = temp_dir.path().join("test_invalid.wod");
     let mut wod_file = File::create(&wod_file_path)?;
-    writeln!(wod_file, "wl 3x(2+1) clean, split jerk @85%|comment|name|extra")?;
-    
+    writeln!(
+        wod_file,
+        "wl 3x(2+1) clean, split jerk @85%|comment|name|extra"
+    )?;
+
     // Create output path
     let output_path = temp_dir.path().join("workouts_invalid.md");
-    
+
     // Run the function - it should work but log an error about the invalid line
     run_add_wod_from_file(
         output_path.clone(),
@@ -222,7 +225,7 @@ fn test_run_add_wod_from_file_invalid_format() -> Result<(), Box<dyn std::error:
     assert_eq!(lines.len(), 9);
     // The file should still be created but without the invalid entry
     assert!(output_path.exists());
-    
+
     Ok(())
 }
 
@@ -230,10 +233,10 @@ fn test_run_add_wod_from_file_invalid_format() -> Result<(), Box<dyn std::error:
 fn test_nonexistent_wodfile() {
     // Create a temporary directory for our test
     let temp_dir = TempDir::new().unwrap();
-    
+
     // Create output path
     let output_path = temp_dir.path().join("workouts_nonexistent.md");
-    
+
     // Try to run the function with a nonexistent WOD file
     let result = run_add_wod_from_file(
         output_path.clone(),
@@ -247,8 +250,6 @@ fn test_nonexistent_wodfile() {
     let err = result.unwrap_err();
     let err_string = err.to_string();
     assert!(err_string.contains("No such file or directory"));
-
 }
-
 
 // TODO: Tests for the format of different WODS
