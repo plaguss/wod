@@ -166,6 +166,7 @@ impl<'a> Lexer<'a> {
                         | 'e'
                         | 'c'
                         | 'a'
+                        | 's'
                 )
             {
                 result.push(c);
@@ -189,8 +190,6 @@ impl<'a> Lexer<'a> {
             }
 
             if first_token {
-                // TODO: This could fail, CORRECT IT
-                // let workout_type = self.read_workout_type()?;
                 let workout_type = self.read_workout_type()?;
                 tokens.push(Token::WorkoutType(workout_type));
                 first_token = false;
@@ -204,12 +203,10 @@ impl<'a> Lexer<'a> {
                     continue;
                 }
                 c if c.is_numeric() => {
-                    // self.parse_numeric(&mut tokens);
                     self.parse_numeric(&mut tokens)?;
                 }
                 c if c.is_alphabetic() => {
                     self.parse_alphabetic(&mut tokens)?;
-                    // self.parse_alphabetic(&mut tokens);
                 }
                 _ => {
                     // Skip any other characters, like commas
@@ -241,6 +238,7 @@ impl<'a> Lexer<'a> {
             Ok(())
         }
         let number = self.read_number_scheme();
+
         // Workouts like 5x5, or 21-15-9 are parsed here
         if number.contains('x') {
             // In case of numbers, store the chars to cast them as a single number at the end
@@ -282,6 +280,18 @@ impl<'a> Lexer<'a> {
                 }
                 Err(_) => {
                     return Err(LexerError::InvalidRM(rm.unwrap_err().to_string()));
+                }
+            }
+        } else if number.contains("sec") || number.contains("min") {
+            let rep_type: Result<RepType, _> = number.parse();
+            match rep_type {
+                Ok(rep_type) => {
+                    tokens.push(Token::RepType(rep_type));
+                }
+                Err(_) => {
+                    return Err(LexerError::InvalidRepType(
+                        rep_type.unwrap_err().to_string(),
+                    ));
                 }
             }
         } else if number.to_lowercase().contains('K')
@@ -330,8 +340,6 @@ impl<'a> Lexer<'a> {
             tokens.push(Token::RepType(RepType::Max));
         }
         if !movement.is_empty() {
-            // let mov: Movement = movement.parse()?;
-            // tokens.push(Token::Movement(mov));
             let mov: Result<Movement, _> = movement.parse();
             match mov {
                 Ok(parsed_movement) => {
@@ -410,6 +418,26 @@ mod tests {
                 Token::Movement(Movement::from_str("double under").unwrap()),
                 Token::RepType(RepType::from_str("30cal").unwrap()),
                 Token::Movement(Movement::from_str("row").unwrap()),
+            ]
+        );
+    }
+
+    #[test]
+    fn test_rounds_2() {
+        let input = "3rd 400m ski, 15cal row, 30sec handstand hold";
+        let mut lexer = Lexer::new(input);
+        let tokens = lexer.tokenize().unwrap();
+
+        assert_eq!(
+            tokens,
+            vec![
+                Token::WorkoutType(WorkoutType::from_str("3rd").unwrap()),
+                Token::RepType(RepType::from_str("400m").unwrap()),
+                Token::Movement(Movement::from_str("ski").unwrap()),
+                Token::RepType(RepType::from_str("15cal").unwrap()),
+                Token::Movement(Movement::from_str("row").unwrap()),
+                Token::RepType(RepType::from_str("30sec").unwrap()),
+                Token::Movement(Movement::from_str("handstand hold").unwrap()),
             ]
         );
     }
