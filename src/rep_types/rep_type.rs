@@ -1,7 +1,7 @@
 use std::fmt;
 use std::str::FromStr;
 
-use crate::rep_types::{cals::Cals, distance::Distance, reps::Reps};
+use crate::rep_types::{cals::Cals, distance::Distance, reps::Reps, time::Time};
 
 /// TODO: All of these must take into account men/woman, so 30/20 cals, 20/15 (for reps),
 /// Represents different types of repetitions or measures in a workout.
@@ -12,7 +12,7 @@ use crate::rep_types::{cals::Cals, distance::Distance, reps::Reps};
 /// # Examples
 ///
 /// ```
-/// use wod::{RepType, Distance, Reps, Cals};
+/// use wod::{RepType, Distance, Reps, Cals, Time};
 ///
 /// let reps = "10".parse::<RepType>().unwrap();
 /// assert_eq!(reps, RepType::Reps(Reps{reps_man: 10, reps_woman: 10}));
@@ -20,6 +20,8 @@ use crate::rep_types::{cals::Cals, distance::Distance, reps::Reps};
 /// assert_eq!(distance, RepType::Distance("100m".parse::<Distance>().unwrap()));
 /// let cals = "10cals".parse::<RepType>().unwrap();
 /// assert_eq!(cals, RepType::Cals(Cals{cals_man: 10, cals_woman: 10}));
+/// let secs = "90sec".parse::<RepType>().unwrap();
+/// assert_eq!(secs, RepType::Time(Time{ num: 90, unit: "sec".to_string() }));
 /// let max = "max".parse::<RepType>().unwrap();
 /// assert_eq!(max, RepType::Max);
 /// ```
@@ -31,6 +33,8 @@ pub enum RepType {
     Distance(Distance),
     /// Calories, e.g. 10cal, 100/80cal
     Cals(Cals),
+    /// Time, e.g. 90sec
+    Time(Time),
     /// Max reps of a given movement in a time.
     Max,
 }
@@ -49,6 +53,10 @@ impl FromStr for RepType {
         // Check if it's a number followed by "cal"
         if s.contains("cal") {
             return Ok(RepType::Cals(s.parse::<Cals>().expect("Invalid calories")));
+        }
+
+        if s.ends_with("sec") || s.ends_with("min") {
+            return Ok(RepType::Time(s.parse::<Time>().expect("Invalid time")));
         }
 
         if s == "max" {
@@ -70,6 +78,7 @@ impl fmt::Display for RepType {
             RepType::Reps(reps) => write!(formatter, "{}", reps),
             RepType::Cals(cals) => write!(formatter, "{}", cals),
             RepType::Distance(distance) => write!(formatter, "{}", distance),
+            RepType::Time(time) => write!(formatter, "{}", time),
             RepType::Max => write!(formatter, "Max reps of"),
         }
     }
@@ -97,6 +106,10 @@ mod tests {
             RepType::from_str("10cal").unwrap(),
             RepType::Cals("10cal".parse::<Cals>().unwrap())
         );
+        assert_eq!(
+            RepType::from_str("90sec").unwrap(),
+            RepType::Time("90sec".parse::<Time>().unwrap())
+        );
         assert_eq!(RepType::from_str("max").unwrap(), RepType::Max);
     }
 
@@ -113,6 +126,10 @@ mod tests {
         assert_eq!(
             format!("{}", RepType::from_str("10cal").unwrap()),
             "10 calories".to_string()
+        );
+        assert_eq!(
+            format!("{}", RepType::from_str("90sec").unwrap()),
+            "90 sec".to_string()
         );
         assert_eq!(format!("{}", RepType::Max), "Max reps of".to_string());
     }

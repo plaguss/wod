@@ -17,7 +17,9 @@ pub use self::workout_types::{
     amrap::AMRAP, emom::EMOM, every::Every, for_time::ForTime, workout_type::WorkoutType,
 };
 
-pub use self::rep_types::{cals::Cals, distance::Distance, rep_type::RepType, reps::Reps};
+pub use self::rep_types::{
+    cals::Cals, distance::Distance, rep_type::RepType, reps::Reps, time::Time,
+};
 
 use std::error::Error;
 use std::fmt;
