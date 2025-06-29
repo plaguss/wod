@@ -3,5 +3,5 @@
 Run as:
 
 ```sh
-uv run fastapi dev
+python main.py
 ```
