@@ -1,0 +1,52 @@
+<!-- templates/index.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Markdown Renderer</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+    <div class="container">
+        <h1>WOD Renderer</h1>
+
+        <form method="post" action="/render" id="markdownForm">
+            <div class="input-section">
+                <label for="markdown_text">Enter Markdown:</label>
+                <textarea
+                    name="markdown_text"
+                    id="markdown_text"
+                    placeholder="Type your wod here..."
+                >{{ markdown_text if markdown_text else "ft 21-15-9 pull up, thruster @ 43/30kg" }}</textarea>
+                <div class="shortcut-hint">Press Ctrl+Enter to render</div>
+            </div>
+
+            <div class="button-container">
+                <button type="submit">Render WOD</button>
+            </div>
+        </form>
+
+        <div class="preview-section">
+            <label>Preview:</label>
+            <div class="preview-content">
+                {% if rendered_html %}
+                    {{ rendered_html|safe }}
+                {% else %}
+                    <em>Rendered WOD will appear here...</em>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Handle Ctrl+Enter shortcut
+        document.getElementById('markdown_text').addEventListener('keydown', function(e) {
+            if (e.ctrlKey && e.key === 'Enter') {
+                e.preventDefault();
+                document.getElementById('markdownForm').submit();
+            }
+        });
+    </script>
+</body>
+</html>
