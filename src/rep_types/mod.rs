@@ -2,6 +2,7 @@ pub mod cals;
 pub mod distance;
 pub mod rep_type;
 pub mod reps;
+pub mod rest_period;
 pub mod time;
 
 pub fn split_gender_unit(w: &str) -> (u32, u32, String) {

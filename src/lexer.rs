@@ -4,6 +4,7 @@ use std::str::Chars;
 
 use crate::movement::Movement;
 use crate::rep_types::rep_type::RepType;
+use crate::rep_types::rest_period::RestPeriod;
 use crate::rm::RM;
 use crate::weight::Weight;
 use crate::WorkoutType;
@@ -110,7 +111,7 @@ impl<'a> Lexer<'a> {
                 break;
             }
         }
-        // let workout_type: WorkoutType = result.parse().expect("Invalid workout type");
+
         let workout_type: Result<WorkoutType, _> = result.parse();
         match workout_type {
             Ok(workout_type) => Ok(workout_type),
@@ -333,12 +334,21 @@ impl<'a> Lexer<'a> {
 
     fn parse_alphabetic(&mut self, tokens: &mut Vec<Token>) -> Result<(), LexerError> {
         let mut movement = self.read_movement();
+
         // "max db snatch" or "max ring muscle up" will be a movement,
         // We have to strip the "max" part if occurs and assign it the corresponding token
         if movement.starts_with("max") {
             movement = movement.replace("max ", "");
             tokens.push(Token::RepType(RepType::Max));
         }
+        // Check if it could be rest before any other type of movement
+        if let Ok(rest) = movement.parse::<RestPeriod>() {
+            tokens.push(Token::RepType(RepType::RestPeriod(rest)));
+            // This is a hacky way of ensuring the rest is properly
+            // rendered, it works but it's ugly
+            movement = "rest".to_string();
+        }
+
         if !movement.is_empty() {
             let mov: Result<Movement, _> = movement.parse();
             match mov {
@@ -351,6 +361,7 @@ impl<'a> Lexer<'a> {
                 }
             }
         }
+
         Ok(())
     }
 }

@@ -18,7 +18,8 @@ pub use self::workout_types::{
 };
 
 pub use self::rep_types::{
-    cals::Cals, distance::Distance, rep_type::RepType, reps::Reps, time::Time,
+    cals::Cals, distance::Distance, rep_type::RepType, reps::Reps, rest_period::RestPeriod,
+    time::Time,
 };
 
 use std::error::Error;
@@ -428,6 +429,38 @@ List of CrossFit movements, click on them to see an explanation.
             .as_str(),
     );
     content
+}
+
+/// Generates a textual representation of a given workout in markdown format.
+///
+/// This function takes a workout and attempts to
+/// parse it into a valid workout structure. If successful, it returns a markdown-formatted string
+/// representing the workout. If parsing fails, it returns the error as a string for
+/// the caller to handle or display.
+///
+/// # Arguments
+///
+/// * `workout` - A `&str` representing the wod to render.
+///
+/// # Returns
+///
+/// * `Result<String, String>` - The markdown string on success,
+///   or a human-readable error message on failure.
+///
+/// # Examples
+///
+/// ```
+/// use wod::run_check_wod;
+///
+/// match run_check_wod("ft 21-15-9 pulup, thruster @ 43/30kg") {
+///     Ok(content) => println!("{}", content),
+///     Err(e) => eprintln!("Failed to parse workout: {}", e),
+/// }
+/// ```
+pub fn run_check_wod(workout: &str) -> Result<String, String> {
+    let wkt = create_workout(workout, None, None)
+        .map_err(|e| format!("While reading workout '{}': {:#?}", workout, e))?;
+    Ok(wkt.write())
 }
 
 #[cfg(test)]

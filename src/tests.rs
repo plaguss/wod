@@ -33,6 +33,13 @@ mod testing {
         assert_eq!(workout.write(), expected);
     }
 
+    #[test]
+    fn test_for_time_3() {
+        let workout = create_workout("ft 50cal row, r2m, 50cal row", None, None).unwrap();
+        let expected = "---\n\n**For Time**\n\n- 50 calories Row\n\n- Rest 2 minutes \n\n- 50 calories Row\n\n";
+        assert_eq!(workout.write(), expected);
+    }
+
     // For weightlifting a small hint should be placed for what (4x2) means (Low priority)
     #[test]
     fn test_weightlifting_0() {
