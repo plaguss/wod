@@ -5,7 +5,9 @@ use std::path::PathBuf;
 use clap::Parser;
 
 use cli::{Cli, Commands};
-use wod::{run_add_wod_from_file, run_add_workout, run_base, run_create_list_movements};
+use wod::{
+    run_add_wod_from_file, run_add_workout, run_base, run_check_wod, run_create_list_movements,
+};
 
 fn main() {
     let cli = Cli::parse();
@@ -25,6 +27,13 @@ fn main() {
         Some(Commands::List(list_command)) => {
             let movement_list = run_create_list_movements(list_command.page);
             println!("{}", movement_list);
+        }
+        Some(Commands::Check(check_wod)) => {
+            // wod check "ft 21-15-9 pull up, thruster @ 43/30kg"
+            match run_check_wod(&check_wod.wod) {
+                Ok(content) => println!("{}", content),
+                Err(e) => eprintln!("Failed to parse workout: {}", e),
+            }
         }
         None => {
             // The base command "wod 'date-filename.md'"

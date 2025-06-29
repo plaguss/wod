@@ -45,6 +45,8 @@ pub enum Commands {
     Add(AddCommand),
     /// Command to list the movements along with an explanatory video.
     List(ListCommand),
+    /// Command to create the workout and return it to the console.
+    Check(CheckCommand),
 }
 
 #[derive(Parser, Debug)]
@@ -71,4 +73,10 @@ pub struct ListCommand {
     /// Whether to list the workouts or generate a markdown page for them.
     #[arg(short, long, default_value = "true")]
     pub page: bool,
+}
+
+#[derive(Parser, Debug)]
+pub struct CheckCommand {
+    /// Whether to list the workouts or generate a markdown page for them.
+    pub wod: String,
 }
