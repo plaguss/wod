@@ -124,6 +124,8 @@ static MOVEMENTS: &[&str] = &[
     "db clean and jerk",
     "db hang clean and jerk",
     "devil press",
+    // Placeholder for resting
+    "rest",
 ];
 
 /// Represents various types of movements that can be performed in a workout.
@@ -228,6 +230,7 @@ pub enum Movement {
     DumbbellCleanAndJerk,
     DumbbellHangCleanAndJerk,
     DevilPress,
+    Rest,
 }
 
 #[derive(Debug)]
@@ -366,6 +369,7 @@ impl FromStr for Movement {
             "dumbbell clean and jerk" => Ok(Movement::DumbbellCleanAndJerk),
             "db clean and jerk" => Ok(Movement::DumbbellCleanAndJerk),
             "devil press" => Ok(Movement::DevilPress),
+            "rest" => Ok(Movement::Rest),
             _ => Err(MovementParseError::new_invalid(s.to_string())),
         }
     }
@@ -464,6 +468,7 @@ impl fmt::Display for Movement {
                 Movement::DumbbellCleanAndJerk => "Dumbbell Clean and Jerk",
                 Movement::DumbbellHangCleanAndJerk => "Dumbbell Hang Clean and Jerk",
                 Movement::DevilPress => "Devil Press",
+                Movement::Rest => "",
             }
         )
     }

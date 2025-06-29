@@ -18,7 +18,8 @@ pub use self::workout_types::{
 };
 
 pub use self::rep_types::{
-    cals::Cals, distance::Distance, rep_type::RepType, reps::Reps, time::Time,
+    cals::Cals, distance::Distance, rep_type::RepType, reps::Reps, rest_period::RestPeriod,
+    time::Time,
 };
 
 use std::error::Error;

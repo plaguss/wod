@@ -1,7 +1,9 @@
 use std::fmt;
 use std::str::FromStr;
 
-use crate::rep_types::{cals::Cals, distance::Distance, reps::Reps, time::Time};
+use crate::rep_types::{
+    cals::Cals, distance::Distance, reps::Reps, rest_period::RestPeriod, time::Time,
+};
 
 /// TODO: All of these must take into account men/woman, so 30/20 cals, 20/15 (for reps),
 /// Represents different types of repetitions or measures in a workout.
@@ -37,12 +39,20 @@ pub enum RepType {
     Time(Time),
     /// Max reps of a given movement in a time.
     Max,
+    /// Rest Period in a workout
+    RestPeriod(RestPeriod),
 }
 
 impl FromStr for RepType {
     type Err = String;
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
+        // Check if is a rest period
+        if s.starts_with('r') && (s.ends_with('m') || s.ends_with('s')) {
+            return Ok(RepType::RestPeriod(
+                s.parse::<RestPeriod>().expect("Invalid rest period"),
+            ));
+        }
         // Check if it's a distance, e.g. 100m, 5K
         if s.ends_with('m') || s.to_lowercase().ends_with('k') {
             return Ok(RepType::Distance(
@@ -80,6 +90,7 @@ impl fmt::Display for RepType {
             RepType::Distance(distance) => write!(formatter, "{}", distance),
             RepType::Time(time) => write!(formatter, "{}", time),
             RepType::Max => write!(formatter, "Max reps of"),
+            RepType::RestPeriod(rest) => write!(formatter, "{}", rest),
         }
     }
 }
@@ -132,5 +143,13 @@ mod tests {
             "90 sec".to_string()
         );
         assert_eq!(format!("{}", RepType::Max), "Max reps of".to_string());
+        assert_eq!(
+            format!("{}", RepType::from_str("r1m").unwrap()),
+            "Rest 1 minute".to_string()
+        );
+        assert_eq!(
+            format!("{}", RepType::from_str("r90s").unwrap()),
+            "Rest 90 seconds".to_string()
+        );
     }
 }
