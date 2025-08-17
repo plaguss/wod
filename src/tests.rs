@@ -69,6 +69,20 @@ mod testing {
     }
 
     #[test]
+    fn test_weightlifting_block_0() {
+        let workout = create_workout("wl [1rm snatch; 1rm clean and jerk]", None, None).unwrap();
+        let expected = "---\n\n**Weightlifting**\n\n- 1rm Snatch\n\n- 1rm Clean And Jerk\n\n";
+        assert_eq!(workout.write(), expected);
+    }
+
+    #[test]
+    fn test_weightlifting_block_1() {
+        let workout = create_workout("wl [3x2 snatch @80%; 3x2 clean @80%]", None, None).unwrap();
+        let expected = "---\n\n**Weightlifting**\n\n- 3x2 Snatch @ 80%\n\n- 3x2 Clean @ 80%\n\n";
+        assert_eq!(workout.write(), expected);
+    }
+
+    #[test]
     fn test_emom_1() {
         let workout = create_workout(
             "emom-12 15cal row, 12 toes to bar, max db clean and jerk @ 22/15kg",

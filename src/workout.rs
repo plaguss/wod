@@ -41,6 +41,26 @@ use crate::WorkoutType;
 pub struct Workout {
     /// The type of workout (ForTime, EMOM, Weightlifting, etc.)
     pub workout_type: WorkoutType,
+    /// Either a simple workout or a block of sub-workouts
+    pub structure: WorkoutStructure,
+    /// The raw tokens that make up the workout, preserving the original structure
+    tokens: Vec<Token>,
+    /// Optional comments/notes about the workout
+    comments: Option<String>,
+    /// Optional name of the workout. Some workouts are given a name, i.e. "Fran".
+    name: Option<String>,
+}
+
+#[derive(Debug, PartialEq)]
+pub enum WorkoutStructure {
+    /// Simple workout with direct movements/reps/weights
+    Simple(SimpleWorkout),
+    /// Block containing multiple sub-workouts
+    Block(Vec<SimpleWorkout>),
+}
+
+#[derive(Debug, PartialEq)]
+pub struct SimpleWorkout {
     /// List of movements included in the workout
     pub movements: Vec<Movement>,
     /// List of repetition types
@@ -59,19 +79,11 @@ pub struct Workout {
     /// Optional collection of "RM" (repetition maximum) tokens
     /// (e.g., "5RM" for 5 repetition maximum)
     pub rm: Option<Vec<RM>>,
-    /// The raw tokens that make up the workout, preserving the original structure
-    tokens: Vec<Token>,
-    /// Optional comments/notes about the workout
-    comments: Option<String>,
-    /// Optional name of the workout. Some workouts are given a name, i.e. "Fran".
-    name: Option<String>,
 }
 
-impl Default for Workout {
-    /// Creates a default Workout with "For Time" workout type and empty collections.
-    fn default() -> Self {
-        Workout {
-            workout_type: WorkoutType::from_str("ft").unwrap(),
+impl SimpleWorkout {
+    pub fn new() -> Self {
+        SimpleWorkout {
             movements: Vec::new(),
             rep_types: Vec::new(),
             weights: Vec::new(),
@@ -79,45 +91,13 @@ impl Default for Workout {
             at: None,
             plus: None,
             rm: None,
-            tokens: Vec::new(),
-            comments: None,
-            name: None,
-        }
-    }
-}
-
-impl Workout {
-    /// Creates a new Workout from a vector of tokens and optional comments.
-    ///
-    /// # Arguments
-    ///
-    /// * `tokens` - A vector of `Token` that represents the workout components
-    /// * `comments` - Optional comments or notes about the workout
-    /// * `name` - Optional name for the workout
-    ///
-    /// # Returns
-    ///
-    /// A new `Workout` instance with the given tokens and comments
-    pub fn new(tokens: Vec<Token>, comments: Option<String>, name: Option<String>) -> Self {
-        Workout {
-            tokens,
-            comments,
-            name,
-            ..Default::default()
         }
     }
 
-    /// Parses the tokens stored in the workout and populates the structured fields.
-    ///
-    /// This method analyzes the tokens vector and extracts specific workout components
-    /// like workout type, movements, repetition types, weights, etc. into their respective
-    /// fields for easier access and manipulation.
-    pub fn parse(&mut self) {
-        for token in &self.tokens {
+    /// Parse tokens into this SimpleWorkout - this is your existing parse logic
+    pub fn parse_from_tokens(&mut self, tokens: &[Token]) {
+        for token in tokens {
             match token {
-                Token::WorkoutType(workout_type) => {
-                    self.workout_type = workout_type.clone();
-                }
                 Token::Movement(movement) => {
                     self.movements.push(movement.clone());
                 }
@@ -151,8 +131,114 @@ impl Workout {
                     }
                     self.rm.as_mut().unwrap().push(rm.clone());
                 }
+                // Ignore structural tokens (brackets, semicolons) and workout type
+                _ => {}
             }
         }
+    }
+}
+
+impl Default for Workout {
+    /// Creates a default Workout with "For Time" workout type and empty collections.
+    fn default() -> Self {
+        Workout {
+            workout_type: WorkoutType::from_str("ft").unwrap(),
+            structure: WorkoutStructure::Simple(SimpleWorkout::new()),
+            tokens: Vec::new(),
+            comments: None,
+            name: None,
+        }
+    }
+}
+
+impl Workout {
+    /// Creates a new Workout from a vector of tokens and optional comments.
+    ///
+    /// # Arguments
+    ///
+    /// * `tokens` - A vector of `Token` that represents the workout components
+    /// * `comments` - Optional comments or notes about the workout
+    /// * `name` - Optional name for the workout
+    ///
+    /// # Returns
+    ///
+    /// A new `Workout` instance with the given tokens and comments
+    pub fn new(tokens: Vec<Token>, comments: Option<String>, name: Option<String>) -> Self {
+        Workout {
+            tokens,
+            comments,
+            name,
+            ..Default::default()
+        }
+    }
+
+    /// This method analyzes the tokens vector and extracts specific workout components
+    /// like workout type, movements, repetition types, weights, etc. into their respective
+    /// fields for easier access and manipulation.
+    pub fn parse(&mut self) {
+        // pub fn parse(&mut self) -> Result<(), ParseError> {
+        let mut i = 0;
+
+        // First token should be WorkoutType
+        if let Some(Token::WorkoutType(workout_type)) = self.tokens.get(i) {
+            self.workout_type = workout_type.clone();
+            i += 1;
+        }
+
+        // Check if next token is a bracket (indicating a block)
+        if let Some(Token::LeftBracket) = self.tokens.get(i) {
+            self.structure = WorkoutStructure::Block(self.parse_block(i + 1));
+        } else {
+            // Parse as simple workout
+            self.structure = WorkoutStructure::Simple(self.parse_simple_workout(i));
+        }
+
+        // Ok(())
+    }
+
+    fn parse_simple_workout(&self, start_index: usize) -> SimpleWorkout {
+        let mut simple_workout = SimpleWorkout::new();
+
+        // Reuse the shared parsing logic
+        simple_workout.parse_from_tokens(&self.tokens[start_index..]);
+
+        // TODO: This should cover possible errors, not done yet
+        simple_workout
+    }
+
+    fn parse_block(&self, start_index: usize) -> Vec<SimpleWorkout> {
+        let mut sub_workouts = Vec::new();
+        let mut current_tokens = Vec::new();
+        let mut i = start_index;
+
+        while i < self.tokens.len() {
+            match &self.tokens[i] {
+                Token::RightBracket => {
+                    // End of block - parse the last sub-workout
+                    if !current_tokens.is_empty() {
+                        let mut sub_workout = SimpleWorkout::new();
+                        sub_workout.parse_from_tokens(&current_tokens);
+                        sub_workouts.push(sub_workout);
+                    }
+                    break;
+                }
+                Token::Semicolon => {
+                    // End of current sub-workout
+                    if !current_tokens.is_empty() {
+                        let mut sub_workout = SimpleWorkout::new();
+                        sub_workout.parse_from_tokens(&current_tokens);
+                        sub_workouts.push(sub_workout);
+                        current_tokens.clear();
+                    }
+                }
+                token => {
+                    current_tokens.push(token.clone());
+                }
+            }
+            i += 1;
+        }
+
+        sub_workouts
     }
 
     /// Formats the workout into a human-readable string representation.
@@ -252,13 +338,25 @@ impl Workout {
         let mut workout = String::new();
 
         if check_contiguous_reps(&self.tokens) {
-            // Format the Reps
-            let reps_formatted = self
+            // Handle this properly with blocks inside "ft" workouts
+            let WorkoutStructure::Simple(simple) = &self.structure else {
+                panic!("For Time formatting only supported for simple workouts");
+            };
+
+            let reps_formatted = simple
                 .rep_types
                 .iter()
                 .map(|r| r.to_string())
                 .collect::<Vec<_>>()
                 .join("-");
+
+            // Format the Reps -> TO REMOVE
+            // let reps_formatted = self
+            //     .rep_types
+            //     .iter()
+            //     .map(|r| r.to_string())
+            //     .collect::<Vec<_>>()
+            //     .join("-");
             workout.push_str(&format!("{}\n\n", reps_formatted));
             // Format the Movements
             // In this case, the weights can be placed after the movements, and to associate
@@ -326,7 +424,26 @@ impl Workout {
     ///
     /// A formatted string representation of the "Weightlifting" workout.
     fn write_weightlifting(&self) -> String {
+        match &self.structure {
+            WorkoutStructure::Simple(simple_workout) => {
+                self.write_simple_weightlifting(simple_workout)
+            }
+            WorkoutStructure::Block(sub_workouts) => {
+                let mut workout = String::new();
+                for sub_workout in sub_workouts.iter() {
+                    workout.push_str(&format!(
+                        "- {}",
+                        &self.write_simple_weightlifting(sub_workout)
+                    ));
+                }
+                workout
+            }
+        }
+    }
+
+    fn write_simple_weightlifting(&self, simple_workout: &SimpleWorkout) -> String {
         let mut workout = String::new();
+
         fn prepare_reps(
             rep_types: &[RepType],
             x: &Option<Vec<Token>>,
@@ -367,9 +484,23 @@ impl Workout {
             reps_str.push_str(") ");
             reps_str
         }
-        workout.push_str(&prepare_reps(&self.rep_types, &self.x, &self.plus));
+
+        // If the workout contains "...rm", it will go on its own
+        if let Some(rms) = &simple_workout.rm {
+            for (rm, movement) in rms.iter().zip(simple_workout.movements.iter()) {
+                workout.push_str(&format!("{} {}\n", rm, movement));
+            }
+            workout.push('\n');
+            return workout;
+        }
+        workout.push_str(&prepare_reps(
+            &simple_workout.rep_types,
+            &simple_workout.x,
+            &simple_workout.plus,
+        ));
+
         // Format the Movements as a + separated list
-        let movements = self
+        let movements = simple_workout
             .movements
             .iter()
             .map(|m| m.to_string())
@@ -377,8 +508,14 @@ impl Workout {
             .join(" + ");
 
         workout.push_str(&movements.to_string());
+
         // NOTE: Could there be more than one weight?
-        workout.push_str(&format!(" @ {}\n\n", self.weights[0]));
+        if !simple_workout.weights.is_empty() {
+            workout.push_str(&format!(" @ {}\n\n", simple_workout.weights[0]));
+        } else {
+            workout.push_str("\n\n");
+        }
+
         workout
     }
 
@@ -517,8 +654,12 @@ mod tests {
         let mut workout = Workout::new(tokens, None, None);
         workout.parse();
 
-        assert_eq!(workout.movements.len(), 2);
-        assert_eq!(workout.rep_types.len(), 3);
+        let WorkoutStructure::Simple(simple) = workout.structure else {
+            panic!("For Time formatting only supported for simple workouts");
+        };
+
+        assert_eq!(simple.movements.len(), 2);
+        assert_eq!(simple.rep_types.len(), 3);
         assert_eq!(
             workout.workout_type,
             WorkoutType::ForTime(ForTime {
@@ -551,20 +692,22 @@ mod tests {
         let workout = "ft 21-15-9 pull up, thruster @ 43/30kg";
         let expected = Workout {
             workout_type: WorkoutType::from_str("ft").unwrap(),
-            movements: vec![
-                Movement::from_str("pull up").unwrap(),
-                Movement::from_str("thruster").unwrap(),
-            ],
-            rep_types: vec![
-                RepType::from_str("21").unwrap(),
-                RepType::from_str("15").unwrap(),
-                RepType::from_str("9").unwrap(),
-            ],
-            weights: vec![Weight::from_str("43/30kg").unwrap()],
-            x: None,
-            at: vec![Token::At].into(),
-            plus: None,
-            rm: None,
+            structure: WorkoutStructure::Simple(SimpleWorkout {
+                movements: vec![
+                    Movement::from_str("pull up").unwrap(),
+                    Movement::from_str("thruster").unwrap(),
+                ],
+                rep_types: vec![
+                    RepType::from_str("21").unwrap(),
+                    RepType::from_str("15").unwrap(),
+                    RepType::from_str("9").unwrap(),
+                ],
+                weights: vec![Weight::from_str("43/30kg").unwrap()],
+                x: None,
+                at: vec![Token::At].into(),
+                plus: None,
+                rm: None,
+            }),
             tokens: vec![
                 Token::WorkoutType(WorkoutType::from_str("ft").unwrap()),
                 Token::RepType(RepType::from_str("21").unwrap()),
