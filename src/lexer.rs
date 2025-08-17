@@ -9,7 +9,7 @@ use crate::rm::RM;
 use crate::weight::Weight;
 use crate::WorkoutType;
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Clone)]
 pub enum Token {
     /// Represents different types of workouts such as ft (for time), amrap (as many reps as possible),
     /// emom (every minute on the minute), wl (weightlifting), and potentially other types.
@@ -32,6 +32,13 @@ pub enum Token {
     /// Denotes the weight used in the exercise, which can be specified in different formats such as '60kg',
     /// '60/40kg' for split weights, or '70%' for a percentage of a maximum.
     Weight(Weight),
+
+    /// Represents '[' - opens a workout block
+    LeftBracket,
+    /// Represents ']' - closes a workout block
+    RightBracket,
+    /// Represents ';' - separates individual workouts within a block
+    Semicolon,
 }
 
 /// Represents a lexical analyzer for parsing workout input strings.
@@ -202,6 +209,18 @@ impl<'a> Lexer<'a> {
                     tokens.push(Token::At);
                     self.advance();
                     continue;
+                }
+                '[' => {
+                    tokens.push(Token::LeftBracket);
+                    self.advance();
+                }
+                ']' => {
+                    tokens.push(Token::RightBracket);
+                    self.advance();
+                }
+                ';' => {
+                    tokens.push(Token::Semicolon);
+                    self.advance();
                 }
                 c if c.is_numeric() => {
                     self.parse_numeric(&mut tokens)?;
@@ -531,6 +550,69 @@ mod tests {
                 Token::Movement(Movement::from_str("split jerk").unwrap()),
                 Token::At,
                 Token::Weight(Weight::from_str("80kg").unwrap()),
+            ]
+        );
+    }
+
+    #[test]
+    fn test_weightlifting_block_0() {
+        let input = "wl [1rm snatch; 1rm clean and jerk]";
+        let mut lexer = Lexer::new(input);
+        let tokens = lexer.tokenize().unwrap();
+
+        assert_eq!(
+            tokens,
+            vec![
+                Token::WorkoutType(WorkoutType::Weightlifting),
+                Token::LeftBracket,
+                Token::RM(RM::from_str("1rm").unwrap()),
+                Token::Movement(Movement::from_str("snatch").unwrap()),
+                Token::Semicolon,
+                Token::RM(RM::from_str("1rm").unwrap()),
+                Token::Movement(Movement::from_str("clean and jerk").unwrap()),
+                Token::RightBracket,
+            ]
+        );
+    }
+
+    #[test]
+    fn test_weightlifting_block_single_movement() {
+        let input = "wl [1rm snatch]";
+        let mut lexer = Lexer::new(input);
+        let tokens = lexer.tokenize().unwrap();
+
+        assert_eq!(
+            tokens,
+            vec![
+                Token::WorkoutType(WorkoutType::Weightlifting),
+                Token::LeftBracket,
+                Token::RM(RM::from_str("1rm").unwrap()),
+                Token::Movement(Movement::from_str("snatch").unwrap()),
+                Token::RightBracket,
+            ]
+        );
+    }
+
+    #[test]
+    fn test_weightlifting_block_three_movements() {
+        let input = "wl [1rm snatch; 1rm snatch; 1rm snatch]";
+        let mut lexer = Lexer::new(input);
+        let tokens = lexer.tokenize().unwrap();
+
+        assert_eq!(
+            tokens,
+            vec![
+                Token::WorkoutType(WorkoutType::Weightlifting),
+                Token::LeftBracket,
+                Token::RM(RM::from_str("1rm").unwrap()),
+                Token::Movement(Movement::from_str("snatch").unwrap()),
+                Token::Semicolon,
+                Token::RM(RM::from_str("1rm").unwrap()),
+                Token::Movement(Movement::from_str("snatch").unwrap()),
+                Token::Semicolon,
+                Token::RM(RM::from_str("1rm").unwrap()),
+                Token::Movement(Movement::from_str("snatch").unwrap()),
+                Token::RightBracket,
             ]
         );
     }
